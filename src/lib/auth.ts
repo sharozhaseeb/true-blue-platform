@@ -99,6 +99,6 @@ export function getClearCookies(): string[] {
 
 export function parseCookies(
   cookieHeader: string | null
-): Record<string, string> {
+): Record<string, string | undefined> {
   return parse(cookieHeader || "");
 }
