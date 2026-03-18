@@ -1,0 +1,16 @@
+node_modules
+.next
+.git
+.env
+.env.*
+!.env.example
+docker-compose.yml
+docker-compose.prod.yml
+docker-data/
+docs/
+*.md
+.vscode/
+.idea/
+Thumbs.db
+.DS_Store
+scripts/

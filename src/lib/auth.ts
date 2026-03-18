@@ -22,7 +22,7 @@ const REFRESH_SECRET = new TextEncoder().encode(
 );
 const ACCESS_EXPIRY = parseInt(process.env.JWT_ACCESS_EXPIRY || "900"); // 15 min
 const REFRESH_EXPIRY = parseInt(process.env.JWT_REFRESH_EXPIRY || "604800"); // 7 days
-const IS_PRODUCTION = process.env.NODE_ENV === "production";
+const IS_PRODUCTION = process.env.USE_SECURE_COOKIES === "true";
 
 export async function signAccessToken(
   payload: AccessTokenPayload
