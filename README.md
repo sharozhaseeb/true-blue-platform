@@ -2,18 +2,24 @@
 
 Secure, multi-tenant document-based AI platform for tax professionals.
 
+## Staging URL
+
+**http://54.208.102.72** (HTTP only — no SSL yet)
+
 ## Tech Stack
 
-- **Next.js 16** — Frontend pages + API routes
+- **Next.js 16** — Frontend pages + API routes (standalone output mode)
 - **TypeScript** — Full type safety
-- **Tailwind CSS** — Styling
-- **PostgreSQL 16** — Database
-- **Prisma 5** — ORM and migrations
-- **jose** — JWT authentication (Edge-compatible)
-- **bcrypt** — Password hashing
-- **Aceternity UI** — Animated background effects
-- **clsx + tailwind-merge** — Utility class management
-- **Docker** — Local development and deployment
+- **Tailwind CSS 4** — Styling
+- **PostgreSQL 16** — Database (Docker for local + staging, RDS for production)
+- **Prisma 5** — ORM and migrations (`binaryTargets: ["native", "debian-openssl-3.0.x"]`)
+- **jose** — JWT authentication (Edge-compatible, HS256)
+- **bcrypt** — Native password hashing (compiled with python3/make/g++ in Docker)
+- **Nginx** — Reverse proxy (rate limiting, security headers)
+- **Aceternity UI** — BackgroundGradientAnimation for landing page
+- **clsx + tailwind-merge** — Utility class management (cn helper)
+- **lucide-react** — Icon library
+- **Docker + Docker Compose** — Local development and staging deployment
 
 ## Prerequisites
 
@@ -24,7 +30,7 @@ Secure, multi-tenant document-based AI platform for tax professionals.
 
 ```bash
 # 1. Clone the repo
-git clone <repo-url>
+git clone git@github.com:sharozhaseeb/true-blue-platform.git
 cd true-blue-platform
 
 # 2. Install dependencies
@@ -48,6 +54,15 @@ npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000)
+
+## Pages
+
+| Route | Description |
+|---|---|
+| `/` | Landing/gateway page — animated gradient background, glass card, Sign in + Register CTAs |
+| `/login` | Login page |
+| `/register` | Registration page |
+| `/dashboard` | Authenticated dashboard — plain background, shows user info |
 
 ## Test Accounts
 
@@ -92,11 +107,12 @@ Open [http://localhost:3000](http://localhost:3000)
 ```
 true-blue-platform/
 ├── prisma/
-│   ├── schema.prisma          # Database schema
+│   ├── schema.prisma          # Database schema (binaryTargets for Debian)
 │   ├── seed.ts                # Test data seeder
 │   └── migrations/            # Migration history
 ├── src/
 │   ├── app/
+│   │   ├── page.tsx           # Landing page (animated gradient)
 │   │   ├── (auth)/            # Auth pages + shared layout
 │   │   │   ├── layout.tsx     # Animated background + footer
 │   │   │   ├── login/         # Login page
@@ -108,7 +124,8 @@ true-blue-platform/
 │   ├── components/
 │   │   └── ui/                # UI components (Aceternity)
 │   ├── lib/                   # Core utilities
-│   │   ├── auth.ts            # JWT + cookie helpers
+│   │   ├── auth.ts            # JWT + cookie helpers (lazy secrets, USE_SECURE_COOKIES)
+│   │   ├── fetch-with-auth.ts # Auto-refresh fetch wrapper (handles 401 + token rotation)
 │   │   ├── password.ts        # bcrypt helpers
 │   │   ├── prisma.ts          # DB client singleton
 │   │   ├── tenant.ts          # Tenant context + access control
@@ -117,14 +134,28 @@ true-blue-platform/
 │   │   └── utils.ts           # cn() class utility
 │   ├── middleware.ts           # Auth + RBAC middleware
 │   └── types/                 # Shared TypeScript types
+├── nginx/
+│   └── nginx.conf             # Reverse proxy config (rate limiting, security headers)
+├── scripts/
+│   └── test-build.sh          # Local Docker build verification
 ├── docs/
 │   ├── architecture-diagram.md
-│   └── tenant-isolation-strategy.md
-├── docker-compose.yml
-└── .env.example
+│   ├── tenant-isolation-strategy.md
+│   ├── staging-notes.md
+│   └── deployment-guide.md
+├── Dockerfile                 # Multi-stage: deps -> builder (Debian slim) -> runner
+├── docker-compose.yml         # Local development (PostgreSQL only)
+├── docker-compose.prod.yml    # Staging/production (db + app + nginx + migrate)
+├── .dockerignore
+├── .env.example               # Environment variable template
+├── .env.staging               # Staging environment template
+└── public/
+    └── .gitkeep               # Prevents Docker COPY failure on empty dir
 ```
 
 ## Documentation
 
-- [Architecture Diagram](docs/architecture-diagram.md)
-- [Tenant Isolation Strategy](docs/tenant-isolation-strategy.md)
+- [Architecture Diagram](docs/architecture-diagram.md) — System architecture, Docker setup, tech stack, deployment topology
+- [Tenant Isolation Strategy](docs/tenant-isolation-strategy.md) — Multi-tenancy model, RBAC, query scoping
+- [Staging Notes](docs/staging-notes.md) — AWS resource IDs, SSH access, deferred items
+- [Deployment Guide](docs/deployment-guide.md) — Complete step-by-step deployment procedure, troubleshooting

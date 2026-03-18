@@ -56,6 +56,22 @@ export const BackgroundGradientAnimation = ({
     document.body.style.setProperty("--pointer-color", pointerColor);
     document.body.style.setProperty("--size", size);
     document.body.style.setProperty("--blending-value", blendingValue);
+
+    return () => {
+      const vars = [
+        "--gradient-background-start",
+        "--gradient-background-end",
+        "--first-color",
+        "--second-color",
+        "--third-color",
+        "--fourth-color",
+        "--fifth-color",
+        "--pointer-color",
+        "--size",
+        "--blending-value",
+      ];
+      vars.forEach((v) => document.body.style.removeProperty(v));
+    };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {

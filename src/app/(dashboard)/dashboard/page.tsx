@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AuthUser } from "@/types";
+import { fetchWithAuth } from "@/lib/fetch-with-auth";
 
 const ROLE_LABELS: Record<string, string> = {
   PLATFORM_ADMIN: "Platform Admin",
@@ -24,9 +25,10 @@ export default function DashboardPage() {
   useEffect(() => {
     async function fetchUser() {
       try {
-        const res = await fetch("/api/auth/me", { credentials: "include" });
+        const res = await fetchWithAuth("/api/auth/me");
 
         if (!res.ok) {
+          // Token refresh was already attempted by fetchWithAuth — redirect to login
           router.push("/login");
           return;
         }

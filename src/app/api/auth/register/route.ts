@@ -11,7 +11,12 @@ import { badRequest, conflict, internalError } from "@/lib/errors";
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
+    let body;
+    try {
+      body = await request.json();
+    } catch {
+      return badRequest("Invalid JSON body");
+    }
     const { email, password, firstName, lastName, firmSlug } = body;
 
     // Validate required fields
@@ -21,8 +26,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Input length validation
+    if (email.length > 254) return badRequest("Email is too long");
+    if (firstName.length > 100) return badRequest("First name is too long");
+    if (lastName.length > 100) return badRequest("Last name is too long");
+    if (firmSlug.length > 100) return badRequest("Firm code is too long");
+    if (password.length > 72)
+      return badRequest("Password must be 72 characters or fewer");
+
     // Validate email format
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
       return badRequest("Invalid email format");
     }
 
@@ -33,8 +46,11 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if email already exists
+    // Note: This reveals whether an email is registered (email enumeration).
+    // Accepted tradeoff for UX — users need to know if their email is already in use.
+    // For higher security, return a generic message for all registration failures.
     const existingUser = await prisma.user.findUnique({
-      where: { email: email.toLowerCase() },
+      where: { email: email.trim().toLowerCase() },
     });
     if (existingUser) {
       return conflict("Email already registered");
@@ -42,7 +58,7 @@ export async function POST(request: NextRequest) {
 
     // Find the firm by slug
     const firm = await prisma.firm.findUnique({
-      where: { slug: firmSlug.toLowerCase() },
+      where: { slug: firmSlug.trim().toLowerCase() },
     });
     if (!firm || !firm.isActive) {
       return badRequest("Invalid or inactive firm code");
@@ -52,10 +68,10 @@ export async function POST(request: NextRequest) {
     const passwordHash = await hashPassword(password);
     const user = await prisma.user.create({
       data: {
-        email: email.toLowerCase(),
+        email: email.trim().toLowerCase(),
         passwordHash,
-        firstName,
-        lastName,
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
         role: "FIRM_USER",
         firmId: firm.id,
       },

@@ -6,15 +6,36 @@
 ┌─────────────────────────────────────────────────────────────────┐
 │                        Client Browser                           │
 │   ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────────┐   │
-│   │  Login   │  │ Register │  │Dashboard │  │ Chat (M4)    │   │
-│   │  Page    │  │  Page    │  │  Page    │  │ Docs (M5)    │   │
-│   │         │  │         │  │         │  │ Admin (M6)   │   │
+│   │  Landing │  │  Login   │  │ Register │  │  Dashboard   │   │
+│   │  Page    │  │  Page    │  │  Page    │  │  Page        │   │
+│   │  /       │  │  /login  │  │ /register│  │  /dashboard  │   │
 │   └──────────┘  └──────────┘  └──────────┘  └──────────────┘   │
+│                                                                 │
+│   Future:                                                       │
+│   ┌──────────────┐                                              │
+│   │ Chat (M4)    │                                              │
+│   │ Docs (M5)    │                                              │
+│   │ Admin (M6)   │                                              │
+│   └──────────────┘                                              │
 └────────────────────────┬────────────────────────────────────────┘
-                         │ HTTPS
+                         │ HTTP (port 80)
                          ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│                    Next.js Application                           │
+│                    Nginx Reverse Proxy (Alpine)                  │
+│                                                                 │
+│  • Listens on port 80 (exposed to internet)                     │
+│  • Proxies to Next.js app on port 3000 (internal)               │
+│  • Rate limiting: 5r/s on /api/auth/*, 10r/s on /api/*         │
+│  • Security headers (X-Frame-Options, X-Content-Type-Options,   │
+│    X-XSS-Protection, Referrer-Policy, Permissions-Policy)       │
+│  • Static asset caching                                         │
+│  • Gzip compression                                             │
+└────────────────────────┬────────────────────────────────────────┘
+                         │ HTTP (port 3000, internal only)
+                         ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                    Next.js Application (Debian slim)             │
+│                    Standalone output mode                        │
 │                                                                 │
 │  ┌────────────────────────────────────────────────────────────┐  │
 │  │                    Middleware                              │  │
@@ -56,15 +77,19 @@
 │                      Data Layer                                 │
 │                                                                 │
 │  ┌─────────────────┐  ┌──────────────┐  ┌───────────────────┐  │
-│  │   PostgreSQL    │  │  AWS S3      │  │  Pinecone         │  │
-│  │   (RDS)        │  │  (M2+)      │  │  Serverless (M3+) │  │
-│  │                │  │              │  │                   │  │
-│  │  • firms       │  │  • PDF       │  │  • Per-tenant     │  │
-│  │  • users       │  │    storage   │  │    namespaces     │  │
-│  │  • refresh_    │  │  • Path:     │  │  • Vector         │  │
-│  │    tokens      │  │    /{firmId}/│  │    embeddings     │  │
-│  │  • documents   │  │    docs/     │  │                   │  │
-│  │    (M2+)       │  │              │  │                   │  │
+│  │  PostgreSQL 16  │  │  AWS S3      │  │  Pinecone         │  │
+│  │  (Alpine,       │  │  (M2+)      │  │  Serverless (M3+) │  │
+│  │   Docker)       │  │              │  │                   │  │
+│  │                │  │  Bucket:     │  │  • Per-tenant     │  │
+│  │  • firms       │  │  trueblue-  │  │    namespaces     │  │
+│  │  • users       │  │  documents- │  │  • Vector         │  │
+│  │  • refresh_    │  │  prod       │  │    embeddings     │  │
+│  │    tokens      │  │  • PDF      │  │                   │  │
+│  │  • documents   │  │    storage  │  │                   │  │
+│  │    (M2+)       │  │  • Path:    │  │                   │  │
+│  │                │  │   /{firmId}/│  │                   │  │
+│  │  Port 5432     │  │   docs/    │  │                   │  │
+│  │  (internal)    │  │            │  │                   │  │
 │  └─────────────────┘  └──────────────┘  └───────────────────┘  │
 │                                                                 │
 │  ┌─────────────────┐                                           │
@@ -139,7 +164,7 @@
 1. Client sends request with expired tb_access cookie
 2. Middleware returns 401 "Token expired"
 3. Client calls POST /api/auth/refresh with tb_refresh cookie
-4. Server verifies refresh JWT → extracts tokenId
+4. Server verifies refresh JWT -> extracts tokenId
 5. Server looks up tokenId in refresh_tokens table
 6. Server DELETES old token (one-time use)
 7. Server creates NEW refresh token record
@@ -154,35 +179,98 @@ Each refresh token can only be used once. If a stolen token is reused after the 
 
 | Component | Technology | Purpose |
 |---|---|---|
-| Frontend | Next.js 16 + Tailwind CSS | Pages, SSR, API routes |
+| Frontend | Next.js 16 + Tailwind CSS 4 | Pages, SSR, API routes |
 | Language | TypeScript | Type safety across frontend and backend |
-| Database | PostgreSQL 16 (Docker local / RDS production) | Users, firms, tokens, metadata |
-| ORM | Prisma 5 | Schema management, migrations, typed queries |
-| Auth | jose (HS256 JWT) + bcrypt | Token signing/verification, password hashing |
+| Database | PostgreSQL 16 (Docker local + staging / RDS production) | Users, firms, tokens, metadata |
+| ORM | Prisma 5 (`binaryTargets: ["native", "debian-openssl-3.0.x"]`) | Schema management, migrations, typed queries |
+| Auth | jose (HS256 JWT) + bcrypt (native) | Token signing/verification, password hashing |
+| UI Components | Aceternity UI (BackgroundGradientAnimation) | Animated landing page effects |
+| Utilities | clsx + tailwind-merge (cn utility) | Class name management |
+| Icons | lucide-react | Icon library |
+| Reverse Proxy | Nginx (Alpine) | Rate limiting, security headers, port 80 -> 3000 |
+| Containerization | Docker + Docker Compose | Local dev, staging deployment |
 | Vector DB | Pinecone Serverless (M3+) | Document embeddings with per-tenant namespaces |
 | LLM | OpenAI GPT-4o-mini (M3+) | RAG responses, vendor-agnostic abstraction |
 | OCR | AWS Textract (M5) | Scanned PDF text extraction |
 | File Storage | AWS S3 (M2+) | PDF document storage |
-| Containerization | Docker + Docker Compose | Local dev, production portability |
+
+## Docker Architecture
+
+### Multi-stage Dockerfile
+
+```
+Stage 1: deps
+  Base: node:20-slim
+  Purpose: Install npm dependencies only (cached layer)
+
+Stage 2: builder
+  Base: node:20-slim
+  Installs: python3, make, g++ (required for bcrypt native compilation)
+  Runs: npx prisma generate, npm run build
+  Output: Next.js standalone build
+
+Stage 3: runner
+  Base: node:20-slim
+  Copies: standalone server.js, static assets, public files, prisma client
+  Runs as: nextjs user (non-root)
+  Exposes: port 3000 (internal only)
+```
+
+### Docker Compose Services (docker-compose.prod.yml)
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                Docker Compose Network                    │
+│                                                         │
+│  ┌───────────┐  ┌───────────┐  ┌───────────────────┐   │
+│  │    db     │  │    app    │  │      nginx        │   │
+│  │           │  │           │  │                   │   │
+│  │ PostgreSQL│  │  Next.js  │  │  Reverse Proxy    │   │
+│  │ 16-alpine │  │ Standalone│  │  Alpine           │   │
+│  │           │  │           │  │                   │   │
+│  │ Port 5432 │  │ Port 3000 │  │ Port 80 (exposed) │   │
+│  │ (internal)│  │ (internal)│  │                   │   │
+│  └───────────┘  └───────────┘  └───────────────────┘   │
+│                                                         │
+│  ┌───────────┐                                          │
+│  │  migrate  │  (profile: setup)                        │
+│  │  One-shot │  Runs: npx prisma migrate deploy         │
+│  └───────────┘                                          │
+└─────────────────────────────────────────────────────────┘
+```
 
 ## Deployment Topology
 
-### Local Development (Current)
+### Local Development
 ```
-Docker Compose
-├── PostgreSQL 16 (port 5432)
-└── Next.js dev server (port 3000, runs on host)
+Host Machine
+├── PostgreSQL 16 via Docker Compose (port 5432)
+└── Next.js dev server on host (port 3000, npm run dev)
 ```
 
-### Production (M4 — Staging)
+### Staging (Current — EC2)
+```
+AWS EC2 (t3.small, Amazon Linux 2023)
+├── Docker Compose
+│   ├── PostgreSQL 16 Alpine (port 5432, internal only)
+│   ├── Next.js app / Debian slim (port 3000, internal only)
+│   └── Nginx Alpine (port 80, exposed to internet)
+├── Elastic IP: 54.208.102.72
+├── Security Group: SSH restricted to 139.135.38.242/32, HTTP open
+├── IMDSv2 enforced
+└── Deploy key: read-only ED25519 for GitHub
+```
+
+### Production (Future — M4+)
 ```
 AWS
-├── EC2 instance
-│   └── Docker container: Next.js app
-├── RDS PostgreSQL (AES-256 at rest)
+├── EC2 or ECS
+│   └── Docker containers: Next.js app + Nginx
+├── RDS PostgreSQL (AES-256 at rest, automated backups)
 ├── S3 bucket (AES-256 at rest, per-tenant paths)
 ├── Pinecone Serverless (per-tenant namespaces)
-└── ALB + ACM certificate (TLS termination)
+├── ACM certificate + domain (TLS termination)
+└── CloudWatch monitoring + alerting
 ```
 
 ### Phase 2 Upgrade Path
@@ -190,7 +278,7 @@ AWS
 AWS
 ├── ECS / Kubernetes cluster
 │   ├── Next.js container (auto-scaling)
-│   └── Load balancer
+│   └── Load balancer (ALB)
 ├── RDS PostgreSQL (same — scales independently)
 ├── S3 (same — scales independently)
 ├── Pinecone Serverless (same — scales independently)
@@ -198,3 +286,30 @@ AWS
 ```
 
 No application code changes required for Phase 2 — only orchestration and infrastructure.
+
+## Pages
+
+| Route | Description |
+|---|---|
+| `/` | Landing/gateway page — animated gradient background (BackgroundGradientAnimation), glass card with Sign in + Register CTAs |
+| `/login` | Login page |
+| `/register` | Registration page |
+| `/dashboard` | Authenticated dashboard — plain background, shows user info |
+
+## Security Configuration
+
+### Nginx Rate Limiting
+- `/api/auth/*` endpoints: 5 requests/second per IP
+- `/api/*` endpoints: 10 requests/second per IP
+
+### Security Headers (applied by both Nginx and next.config.ts)
+- X-Frame-Options: DENY
+- X-Content-Type-Options: nosniff
+- X-XSS-Protection: 1; mode=block
+- Referrer-Policy: strict-origin-when-cross-origin
+- Permissions-Policy: restricted
+
+### Cookie Security
+- `USE_SECURE_COOKIES` env var decouples cookie `Secure` flag from `NODE_ENV`
+- Staging: `USE_SECURE_COOKIES=false` (HTTP only, no SSL yet)
+- Production: `USE_SECURE_COOKIES=true` (after SSL is configured)

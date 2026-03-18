@@ -1,11 +1,10 @@
 import { SignJWT, jwtVerify } from "jose";
 import { serialize, parse } from "cookie";
-import { Role } from "@prisma/client";
 
 export interface AccessTokenPayload {
   userId: string;
   email: string;
-  role: Role;
+  role: string;
   firmId: string | null;
 }
 
@@ -14,14 +13,40 @@ interface RefreshTokenPayload {
   tokenId: string;
 }
 
-const ACCESS_SECRET = new TextEncoder().encode(
-  process.env.JWT_ACCESS_SECRET || "fallback-dev-secret"
-);
-const REFRESH_SECRET = new TextEncoder().encode(
-  process.env.JWT_REFRESH_SECRET || "fallback-dev-secret"
-);
-const ACCESS_EXPIRY = parseInt(process.env.JWT_ACCESS_EXPIRY || "900"); // 15 min
-const REFRESH_EXPIRY = parseInt(process.env.JWT_REFRESH_EXPIRY || "604800"); // 7 days
+// Lazy-initialized secrets — avoids module-level evaluation during Next.js build
+let _accessSecret: Uint8Array | null = null;
+let _refreshSecret: Uint8Array | null = null;
+
+function getAccessSecret(): Uint8Array {
+  if (!_accessSecret) {
+    const value = process.env.JWT_ACCESS_SECRET;
+    if (!value) {
+      throw new Error(
+        "Missing required environment variable: JWT_ACCESS_SECRET"
+      );
+    }
+    _accessSecret = new TextEncoder().encode(value);
+  }
+  return _accessSecret;
+}
+
+function getRefreshSecret(): Uint8Array {
+  if (!_refreshSecret) {
+    const value = process.env.JWT_REFRESH_SECRET;
+    if (!value) {
+      throw new Error(
+        "Missing required environment variable: JWT_REFRESH_SECRET"
+      );
+    }
+    _refreshSecret = new TextEncoder().encode(value);
+  }
+  return _refreshSecret;
+}
+
+function getExpiry(envVar: string, fallback: number): number {
+  return parseInt(process.env[envVar] || String(fallback));
+}
+
 const IS_PRODUCTION = process.env.USE_SECURE_COOKIES === "true";
 
 export async function signAccessToken(
@@ -29,9 +54,9 @@ export async function signAccessToken(
 ): Promise<string> {
   return new SignJWT(payload as unknown as Record<string, unknown>)
     .setProtectedHeader({ alg: "HS256" })
-    .setExpirationTime(`${ACCESS_EXPIRY}s`)
+    .setExpirationTime(`${getExpiry("JWT_ACCESS_EXPIRY", 900)}s`)
     .setIssuedAt()
-    .sign(ACCESS_SECRET);
+    .sign(getAccessSecret());
 }
 
 export async function signRefreshToken(
@@ -39,22 +64,22 @@ export async function signRefreshToken(
 ): Promise<string> {
   return new SignJWT(payload as unknown as Record<string, unknown>)
     .setProtectedHeader({ alg: "HS256" })
-    .setExpirationTime(`${REFRESH_EXPIRY}s`)
+    .setExpirationTime(`${getExpiry("JWT_REFRESH_EXPIRY", 604800)}s`)
     .setIssuedAt()
-    .sign(REFRESH_SECRET);
+    .sign(getRefreshSecret());
 }
 
 export async function verifyAccessToken(
   token: string
 ): Promise<AccessTokenPayload> {
-  const { payload } = await jwtVerify(token, ACCESS_SECRET);
+  const { payload } = await jwtVerify(token, getAccessSecret());
   return payload as unknown as AccessTokenPayload;
 }
 
 export async function verifyRefreshToken(
   token: string
 ): Promise<RefreshTokenPayload> {
-  const { payload } = await jwtVerify(token, REFRESH_SECRET);
+  const { payload } = await jwtVerify(token, getRefreshSecret());
   return payload as unknown as RefreshTokenPayload;
 }
 
@@ -64,7 +89,7 @@ export function getAccessCookie(token: string): string {
     secure: IS_PRODUCTION,
     sameSite: "lax",
     path: "/",
-    maxAge: ACCESS_EXPIRY,
+    maxAge: getExpiry("JWT_ACCESS_EXPIRY", 900),
   });
 }
 
@@ -74,7 +99,7 @@ export function getRefreshCookie(token: string): string {
     secure: IS_PRODUCTION,
     sameSite: "lax",
     path: "/",
-    maxAge: REFRESH_EXPIRY,
+    maxAge: getExpiry("JWT_REFRESH_EXPIRY", 604800),
   });
 }
 

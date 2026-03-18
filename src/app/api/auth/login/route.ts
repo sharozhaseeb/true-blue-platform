@@ -11,16 +11,25 @@ import { badRequest, unauthorized, internalError } from "@/lib/errors";
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
+    let body;
+    try {
+      body = await request.json();
+    } catch {
+      return badRequest("Invalid JSON body");
+    }
     const { email, password } = body;
 
     if (!email || !password) {
       return badRequest("Email and password are required");
     }
 
+    if (email.length > 254 || password.length > 72) {
+      return badRequest("Invalid input");
+    }
+
     // Find user with firm info
     const user = await prisma.user.findUnique({
-      where: { email: email.toLowerCase() },
+      where: { email: email.trim().toLowerCase() },
       include: { firm: true },
     });
 
@@ -34,7 +43,9 @@ export async function POST(request: NextRequest) {
       return unauthorized("Invalid email or password");
     }
 
-    // Clean up old refresh tokens for this user
+    // Single-session enforcement: delete all existing refresh tokens.
+    // Logging in from a new device invalidates all other sessions.
+    // TODO: For multi-device support in M2+, keep multiple tokens (with a cap).
     await prisma.refreshToken.deleteMany({
       where: { userId: user.id },
     });

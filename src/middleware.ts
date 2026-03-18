@@ -43,6 +43,10 @@ export async function middleware(request: NextRequest) {
     const payload = await verifyAccessToken(accessToken);
 
     // RBAC: Admin-only paths
+    // Note: Middleware runs in Edge Runtime where @prisma/client imports may not
+    // be available, so we use direct role checks here instead of hasPermission()
+    // from @/lib/rbac. API routes (which run in Node.js) should use hasPermission()
+    // for fine-grained permission checks. See src/lib/rbac.ts.
     if (ADMIN_ONLY_PATHS.some((p) => pathname.startsWith(p))) {
       if (payload.role !== "PLATFORM_ADMIN") {
         return NextResponse.json({ error: "Forbidden" }, { status: 403 });
