@@ -11,6 +11,8 @@ Secure, multi-tenant document-based AI platform for tax professionals.
 - **Prisma 5** — ORM and migrations
 - **jose** — JWT authentication (Edge-compatible)
 - **bcrypt** — Password hashing
+- **Aceternity UI** — Animated background effects
+- **clsx + tailwind-merge** — Utility class management
 - **Docker** — Local development and deployment
 
 ## Prerequisites
@@ -95,16 +97,24 @@ true-blue-platform/
 │   └── migrations/            # Migration history
 ├── src/
 │   ├── app/
-│   │   ├── (auth)/            # Public pages (login, register)
+│   │   ├── (auth)/            # Auth pages + shared layout
+│   │   │   ├── layout.tsx     # Animated background + footer
+│   │   │   ├── login/         # Login page
+│   │   │   └── register/      # Registration page
 │   │   ├── (dashboard)/       # Authenticated pages
+│   │   │   ├── layout.tsx     # Nav bar + logout
+│   │   │   └── dashboard/     # Dashboard page
 │   │   └── api/auth/          # Auth API routes
+│   ├── components/
+│   │   └── ui/                # UI components (Aceternity)
 │   ├── lib/                   # Core utilities
 │   │   ├── auth.ts            # JWT + cookie helpers
 │   │   ├── password.ts        # bcrypt helpers
 │   │   ├── prisma.ts          # DB client singleton
 │   │   ├── tenant.ts          # Tenant context + access control
 │   │   ├── rbac.ts            # Role-permission mapping
-│   │   └── errors.ts          # API error responses
+│   │   ├── errors.ts          # API error responses
+│   │   └── utils.ts           # cn() class utility
 │   ├── middleware.ts           # Auth + RBAC middleware
 │   └── types/                 # Shared TypeScript types
 ├── docs/

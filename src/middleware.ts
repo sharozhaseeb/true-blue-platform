@@ -15,6 +15,11 @@ const ADMIN_ONLY_PATHS = ["/api/admin"];
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
+  // Allow root landing page
+  if (pathname === "/") {
+    return NextResponse.next();
+  }
+
   // Allow public paths
   if (PUBLIC_PATHS.some((p) => pathname.startsWith(p))) {
     return NextResponse.next();
