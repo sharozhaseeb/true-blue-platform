@@ -63,12 +63,13 @@
 │  ┌──────────────────────┴─────────────────────────────────────┐  │
 │  │                  Service Layer (src/lib/)                  │  │
 │  │                                                           │  │
-│  │  auth.ts     — JWT sign/verify, cookie management         │  │
-│  │  password.ts — bcrypt hash/compare, validation            │  │
-│  │  tenant.ts   — Request context extraction, access control │  │
-│  │  rbac.ts     — Permission map per role                    │  │
-│  │  prisma.ts   — Database client singleton                  │  │
-│  │  errors.ts   — Standardized API error responses           │  │
+│  │  auth.ts          — JWT sign/verify, cookie mgmt (lazy secrets) │  │
+│  │  fetch-with-auth  — Client-side 401 auto-refresh wrapper  │  │
+│  │  password.ts      — bcrypt hash/compare, validation       │  │
+│  │  tenant.ts        — Request context, access control       │  │
+│  │  rbac.ts          — Permission map per role               │  │
+│  │  prisma.ts        — Database client singleton             │  │
+│  │  errors.ts        — Standardized API error responses      │  │
 │  └────────────────────────────────────────────────────────────┘  │
 └────────────┬────────────────────────────────────────────────────┘
              │

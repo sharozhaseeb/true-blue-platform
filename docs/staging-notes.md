@@ -104,3 +104,5 @@ Firm codes for registration: `acme-tax`, `best-tax`
 | **ED25519 deploy key** | Read-only GitHub access from EC2. More secure than RSA. No personal tokens on the server. |
 | **node:20-slim over node:20-alpine** | Alpine uses musl libc which is incompatible with Prisma 5 schema engine. Debian slim uses glibc and works correctly with `debian-openssl-3.0.x` binary target. |
 | **IMDSv2 enforced** | Prevents SSRF attacks that could steal EC2 instance credentials via the metadata service. |
+| **Lazy JWT secret initialization** | JWT secrets are lazily loaded on first use rather than at module level. Prevents build-time crashes when env vars aren't set (Docker build stage has no `.env`). Also removed `@prisma/client` import from `auth.ts` to avoid Edge Runtime issues in middleware. |
+| **fetchWithAuth singleton refresh** | Client-side fetch wrapper that intercepts 401 responses, refreshes the token, and retries. Uses a singleton promise to prevent concurrent 401s from triggering multiple refresh calls (token rotation would invalidate the second). |
