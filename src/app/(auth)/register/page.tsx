@@ -49,34 +49,41 @@ export default function RegisterPage() {
     }
   }
 
+  const inputClasses =
+    "block w-full h-12 rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-base text-gray-900 placeholder-gray-300 transition-all duration-200 hover:border-gray-300 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white focus:shadow-[0_0_0_3px_rgba(59,130,246,0.08)]";
+
   return (
-    <div className="w-full max-w-lg rounded-2xl bg-white/85 p-10 sm:p-12 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.05),0_20px_50px_-12px_rgba(0,0,0,0.25)] border border-white/20 backdrop-blur-xl">
-      <Link href="/" className="inline-flex items-center gap-1.5 text-xs text-gray-400 hover:text-gray-600 transition-colors mb-8">
-        <ArrowLeft className="h-3 w-3" />
-        Home
-      </Link>
-      <div className="text-center mb-10">
-        <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-blue-600 shadow-md">
-          <span className="text-lg font-bold text-white tracking-tight">
-            TB
-          </span>
-        </div>
-        <h1 className="text-3xl font-bold tracking-tight text-gray-900">
-          True Blue
-        </h1>
-        <p className="mt-2 text-sm font-medium tracking-wide text-gray-400 uppercase">
+    <>
+      <div className="animate-fade-in">
+        <Link
+          href="/"
+          className="inline-flex items-center gap-1.5 text-sm text-gray-400 hover:text-gray-600 transition-colors duration-200 mb-10"
+        >
+          <ArrowLeft className="h-3.5 w-3.5" />
+          Home
+        </Link>
+      </div>
+
+      <div className="animate-fade-in-up mb-10">
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-gray-900">
           Create your account
+        </h1>
+        <p className="mt-2 text-sm text-gray-500">
+          Get started with True Blue in minutes
         </p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
         {error && (
-          <div role="alert" className="rounded-lg bg-red-50/80 border border-red-100 px-4 py-3 text-sm text-red-600">
+          <div
+            role="alert"
+            className="animate-fade-in rounded-lg bg-red-50/80 border border-red-100 px-4 py-3 text-sm text-red-600"
+          >
             {error}
           </div>
         )}
 
-        <div className="space-y-5">
+        <div className="space-y-5 animate-fade-in-up [animation-delay:100ms]">
           <div className="grid grid-cols-2 gap-5">
             <div>
               <label
@@ -91,7 +98,7 @@ export default function RegisterPage() {
                 required
                 value={form.firstName}
                 onChange={(e) => updateField("firstName", e.target.value)}
-                className="block w-full h-12 rounded-lg border border-gray-200/60 bg-white/80 px-4 py-3 text-base text-gray-900 placeholder-gray-300 transition-colors duration-200 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white"
+                className={inputClasses}
               />
             </div>
             <div>
@@ -107,7 +114,7 @@ export default function RegisterPage() {
                 required
                 value={form.lastName}
                 onChange={(e) => updateField("lastName", e.target.value)}
-                className="block w-full h-12 rounded-lg border border-gray-200/60 bg-white/80 px-4 py-3 text-base text-gray-900 placeholder-gray-300 transition-colors duration-200 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white"
+                className={inputClasses}
               />
             </div>
           </div>
@@ -125,11 +132,13 @@ export default function RegisterPage() {
               required
               value={form.email}
               onChange={(e) => updateField("email", e.target.value)}
-              className="block w-full h-12 rounded-lg border border-gray-200/60 bg-white/80 px-4 py-3 text-base text-gray-900 placeholder-gray-300 transition-colors duration-200 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white"
+              className={inputClasses}
               placeholder="you@example.com"
             />
           </div>
+        </div>
 
+        <div className="space-y-5 animate-fade-in-up [animation-delay:200ms]">
           <div>
             <label
               htmlFor="password"
@@ -143,7 +152,7 @@ export default function RegisterPage() {
               required
               value={form.password}
               onChange={(e) => updateField("password", e.target.value)}
-              className="block w-full h-12 rounded-lg border border-gray-200/60 bg-white/80 px-4 py-3 text-base text-gray-900 placeholder-gray-300 transition-colors duration-200 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white"
+              className={inputClasses}
               placeholder="Min 8 chars, uppercase, lowercase, number"
             />
             <p className="mt-1.5 text-xs text-gray-400/80">
@@ -164,7 +173,7 @@ export default function RegisterPage() {
               required
               value={form.firmSlug}
               onChange={(e) => updateField("firmSlug", e.target.value)}
-              className="block w-full h-12 rounded-lg border border-gray-200/60 bg-white/80 px-4 py-3 text-base text-gray-900 placeholder-gray-300 transition-colors duration-200 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white"
+              className={inputClasses}
               placeholder="Provided by your firm admin"
             />
             <p className="mt-1.5 text-xs text-gray-400/80">
@@ -173,24 +182,26 @@ export default function RegisterPage() {
           </div>
         </div>
 
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full h-12 rounded-lg bg-gradient-to-b from-blue-500 to-blue-600 px-4 py-3 text-base font-semibold text-white shadow-md shadow-blue-600/25 transition-all duration-200 hover:from-blue-600 hover:to-blue-700 hover:shadow-lg hover:shadow-blue-600/30 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 active:from-blue-700 active:to-blue-800 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none"
-        >
-          {loading ? "Creating account..." : "Create account"}
-        </button>
+        <div className="animate-fade-in-up [animation-delay:300ms]">
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full h-12 rounded-lg bg-gradient-to-b from-blue-500 to-blue-600 px-4 py-3 text-base font-semibold text-white shadow-md shadow-blue-600/25 transition-all duration-200 hover:from-blue-600 hover:to-blue-700 hover:shadow-lg hover:shadow-blue-600/30 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 active:scale-[0.98] active:from-blue-700 active:to-blue-800 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none cursor-pointer"
+          >
+            {loading ? "Creating account..." : "Create account"}
+          </button>
+        </div>
 
-        <p className="text-center text-sm text-gray-400 pt-2">
+        <p className="text-center text-sm text-gray-400 pt-4 animate-fade-in [animation-delay:400ms]">
           Already have an account?{" "}
           <Link
             href="/login"
-            className="font-medium text-blue-600 hover:text-blue-500"
+            className="font-medium text-blue-600 hover:text-blue-500 transition-colors"
           >
             Sign in
           </Link>
         </p>
       </form>
-    </div>
+    </>
   );
 }
