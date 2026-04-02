@@ -51,7 +51,7 @@ This platform uses **httpOnly JWT cookies** instead of API keys. This is a secur
 # Login and see the Set-Cookie headers
 curl -v http://54.208.102.72/api/auth/login \
   -X POST -H "Content-Type: application/json" \
-  -d '{"email":"admin@acmetax.com","password":"FirmAdmin1!"}' \
+  -d "{\"email\":\"admin@acmetax.com\",\"password\":\"FirmAdmin1!\"}" \
   2>&1 | grep "Set-Cookie"
 
 # Expected: Two Set-Cookie headers
@@ -80,8 +80,8 @@ curl -v http://54.208.102.72/dashboard 2>&1 | grep "Location"
 1. Log in as `user@acmetax.com` / `FirmUser1!` via the UI
 2. In the same browser, navigate to: `http://54.208.102.72/api/test/tenant-check`
 3. **Expected:** JSON showing `yourFirm: "Acme Tax Services"`, `otherFirmsVisible: 0`
-4. Log out, log in as `admin@besttax.com` / `FirmAdmin1!`
-5. Navigate to the same URL again
+4. Click the browser back button → click **Sign out** (top right of dashboard) → sign in as `admin@besttax.com` / `FirmAdmin1!`
+5. Navigate to the same URL again: `http://54.208.102.72/api/test/tenant-check`
 6. **Expected:** JSON showing `yourFirm: "Best Tax Advisors"`, `otherFirmsVisible: 0`
 
 ### Test 2b: curl test (compare across firms)
@@ -90,7 +90,7 @@ curl -v http://54.208.102.72/dashboard 2>&1 | grep "Location"
 # Login as Acme Tax user
 curl -c acme.txt http://54.208.102.72/api/auth/login \
   -X POST -H "Content-Type: application/json" \
-  -d '{"email":"user@acmetax.com","password":"FirmUser1!"}'
+  -d "{\"email\":\"user@acmetax.com\",\"password\":\"FirmUser1!\"}"
 
 # Check tenant isolation
 curl -b acme.txt http://54.208.102.72/api/test/tenant-check
@@ -107,7 +107,7 @@ curl -b acme.txt http://54.208.102.72/api/test/tenant-check
 # Login as Best Tax user
 curl -c best.txt http://54.208.102.72/api/auth/login \
   -X POST -H "Content-Type: application/json" \
-  -d '{"email":"admin@besttax.com","password":"FirmAdmin1!"}'
+  -d "{\"email\":\"admin@besttax.com\",\"password\":\"FirmAdmin1!\"}"
 
 # Check tenant isolation
 curl -b best.txt http://54.208.102.72/api/test/tenant-check
@@ -133,7 +133,7 @@ curl -b best.txt http://54.208.102.72/api/test/tenant-check
 ```bash
 curl -c admin.txt http://54.208.102.72/api/auth/login \
   -X POST -H "Content-Type: application/json" \
-  -d '{"email":"admin@trueblue.dev","password":"Admin123!"}'
+  -d "{\"email\":\"admin@trueblue.dev\",\"password\":\"Admin123!\"}"
 
 curl -b admin.txt http://54.208.102.72/api/test/tenant-check
 # Expected: scope "all_firms" with both firms listed
@@ -157,8 +157,8 @@ Request → Nginx (strips injected x-user-* headers)
 1. Log in as `user@acmetax.com` / `FirmUser1!` via the UI
 2. Navigate to: `http://54.208.102.72/api/test/rbac-check`
 3. **Expected:** role "FIRM_USER", 3 granted permissions, 3 denied
-4. Log out, log in as `admin@trueblue.dev` / `Admin123!`
-5. Navigate to the same URL
+4. Click the browser back button → click **Sign out** (top right of dashboard) → sign in as `admin@trueblue.dev` / `Admin123!`
+5. Navigate to the same URL: `http://54.208.102.72/api/test/rbac-check`
 6. **Expected:** role "PLATFORM_ADMIN", 6 granted, 0 denied
 
 ### Test 3b: curl test (all three roles)
@@ -170,7 +170,7 @@ curl -b admin.txt http://54.208.102.72/api/test/rbac-check
 # As Firm Admin (4 granted, 2 denied: manage_firms, manage_all_users)
 curl -c firm_admin.txt http://54.208.102.72/api/auth/login \
   -X POST -H "Content-Type: application/json" \
-  -d '{"email":"admin@acmetax.com","password":"FirmAdmin1!"}'
+  -d "{\"email\":\"admin@acmetax.com\",\"password\":\"FirmAdmin1!\"}"
 curl -b firm_admin.txt http://54.208.102.72/api/test/rbac-check
 
 # As Firm User (3 granted, 3 denied: manage_firms, manage_all_users, manage_firm_users)
