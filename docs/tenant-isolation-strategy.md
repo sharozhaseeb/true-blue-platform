@@ -8,6 +8,19 @@ The platform uses a **single-database, shared-schema** multi-tenancy model where
 
 ## Isolation Layers
 
+### Layer 0: Nginx — Header Stripping (Defense-in-Depth)
+
+Nginx strips `x-user-id`, `x-user-role`, and `x-user-firm-id` from all incoming requests before they reach the application. This prevents a client from injecting fake tenant context headers to bypass isolation.
+
+```nginx
+# Applied in every proxied location block
+proxy_set_header x-user-id "";
+proxy_set_header x-user-role "";
+proxy_set_header x-user-firm-id "";
+```
+
+The middleware then sets these headers from the verified JWT payload — guaranteeing they are trustworthy regardless of what the client sent.
+
 ### Layer 1: JWT Token — Identity & Tenant Binding
 
 Every authenticated user receives a JWT access token containing:
@@ -122,13 +135,17 @@ Plus one Platform Admin: admin@trueblue.dev
 
 ### Verification Steps
 
-1. **Cross-tenant API access**: Log in as `user@acmetax.com`, call any data endpoint. Log in as `admin@besttax.com`, call the same endpoint. Verify each user only sees their own firm's data.
+1. **Tenant isolation endpoint**: Call `GET /api/test/tenant-check` as different users. Each firm user sees only their firm's data with `otherFirmsVisible: 0`. Platform Admin sees all firms.
 
-2. **RBAC enforcement**: Log in as `user@acmetax.com` (FIRM_USER), attempt to call admin-only endpoints (e.g., `/api/admin/firms`). Verify 403 Forbidden response.
+2. **RBAC endpoint**: Call `GET /api/test/rbac-check` as each role. Verify different granted/denied permission lists per role.
 
-3. **Token tampering**: Modify the `tb_access` cookie value. Verify the middleware rejects the request with 401.
+3. **Middleware blocking**: Call `GET /api/admin/anything` as a Firm User → 403 Forbidden. Same call as Platform Admin → 404 (allowed through).
 
-4. **Missing tenant context**: Send a request without cookies to a protected endpoint. Verify redirect to `/login` (pages) or 401 (API).
+4. **Token tampering**: Modify the `tb_access` cookie value. Verify the middleware rejects the request with 401.
+
+5. **Missing tenant context**: Send a request without cookies to a protected endpoint. Verify redirect to `/login` (pages) or 401 (API).
+
+See `docs/m1-acceptance-testing.md` for step-by-step curl commands and browser instructions.
 
 ## Summary
 
@@ -136,10 +153,13 @@ Plus one Platform Admin: admin@trueblue.dev
 Request
   │
   ▼
-Middleware ──► Validate JWT ──► Extract firmId ──► Inject headers
+Nginx ──► Strip client-injected x-user-* headers
   │
   ▼
-API Route ──► getRequestContext() ──► firmId from headers
+Middleware ──► Validate JWT ──► Extract firmId ──► Inject trusted headers
+  │
+  ▼
+API Route ──► getRequestContext() ──► firmId from trusted headers
   │
   ▼
 Database Query ──► WHERE firmId = ctx.firmId

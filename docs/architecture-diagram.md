@@ -25,6 +25,7 @@
 │                                                                 │
 │  • Listens on port 80 (exposed to internet)                     │
 │  • Proxies to Next.js app on port 3000 (internal)               │
+│  • Strips client-injected x-user-* headers (tenant isolation)   │
 │  • Rate limiting: 5r/s on /api/auth/*, 10r/s on /api/*         │
 │  • Security headers (X-Frame-Options, X-Content-Type-Options,   │
 │    X-XSS-Protection, Referrer-Policy, Permissions-Policy)       │
@@ -309,6 +310,11 @@ No application code changes required for Phase 2 — only orchestration and infr
 - X-XSS-Protection: 1; mode=block
 - Referrer-Policy: strict-origin-when-cross-origin
 - Permissions-Policy: restricted
+
+### Tenant Isolation — Nginx Header Stripping
+- Nginx strips `x-user-id`, `x-user-role`, `x-user-firm-id` from all incoming requests
+- Prevents clients from injecting fake tenant context to bypass isolation
+- The middleware then sets these headers from the verified JWT — guaranteed trustworthy
 
 ### Cookie Security
 - `USE_SECURE_COOKIES` env var decouples cookie `Secure` flag from `NODE_ENV`
