@@ -52,6 +52,7 @@ services:
       NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL}
       NODE_ENV: production
       USE_SECURE_COOKIES: ${USE_SECURE_COOKIES}
+      ENABLE_TEST_ENDPOINTS: ${ENABLE_TEST_ENDPOINTS:-false}
     depends_on:
       db:
         condition: service_healthy
