@@ -1,6 +1,6 @@
 import { Role } from "@prisma/client";
 
-type Permission =
+export type Permission =
   | "manage_firms"
   | "manage_all_users"
   | "manage_firm_users"

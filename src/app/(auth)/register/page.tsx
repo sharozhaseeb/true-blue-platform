@@ -69,7 +69,7 @@ export default function RegisterPage() {
           Create your account
         </h1>
         <p className="mt-2 text-sm text-gray-500">
-          Get started with True Blue in minutes
+          Get started with EulerTel in minutes
         </p>
       </div>
 
@@ -174,10 +174,10 @@ export default function RegisterPage() {
               value={form.firmSlug}
               onChange={(e) => updateField("firmSlug", e.target.value)}
               className={inputClasses}
-              placeholder="Provided by your firm admin"
+              placeholder="e.g., acme-tax"
             />
             <p className="mt-1.5 text-xs text-gray-400/80">
-              Enter the firm code provided by your administrator
+              Your firm administrator will provide this code
             </p>
           </div>
         </div>

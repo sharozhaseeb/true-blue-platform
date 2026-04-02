@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "True Blue Financial Intelligence",
+  title: "EulerTel — Financial Intelligence Platform",
   description: "Secure document-based AI platform for tax professionals",
 };
 

@@ -25,11 +25,11 @@ export default function LandingPage() {
               <div className="text-center mb-12 animate-fade-in-up [animation-delay:100ms]">
                 <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-xl bg-blue-600 shadow-lg shadow-blue-600/20">
                   <span className="text-xl font-bold text-white tracking-tight">
-                    TB
+                    ET
                   </span>
                 </div>
                 <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-gray-900">
-                  True Blue
+                  EulerTel
                 </h1>
                 <p className="mt-3 text-xs font-semibold tracking-[0.25em] text-gray-400 uppercase">
                   Financial Intelligence Platform

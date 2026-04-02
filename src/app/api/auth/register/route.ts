@@ -61,7 +61,9 @@ export async function POST(request: NextRequest) {
       where: { slug: firmSlug.trim().toLowerCase() },
     });
     if (!firm || !firm.isActive) {
-      return badRequest("Invalid or inactive firm code");
+      return badRequest(
+        "Firm code not found. Please check with your firm administrator."
+      );
     }
 
     // Create user

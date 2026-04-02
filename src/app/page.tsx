@@ -4,7 +4,7 @@ import type { Metadata } from "next";
 import LandingPage from "./_components/landing-page";
 
 export const metadata: Metadata = {
-  title: "True Blue Financial Intelligence Platform",
+  title: "EulerTel — Financial Intelligence Platform",
   description:
     "Secure AI-powered document intelligence for tax professionals.",
   robots: { index: false, follow: false },

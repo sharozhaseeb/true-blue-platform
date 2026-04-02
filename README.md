@@ -1,6 +1,8 @@
-# True Blue Financial Intelligence Platform
+# EulerTel — Financial Intelligence Platform
 
 Secure, multi-tenant document-based AI platform for tax professionals.
+
+*By True Blue Financial Intelligence LLC*
 
 ## Staging URL
 
