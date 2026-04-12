@@ -20,7 +20,7 @@
 | S3 Bucket | `trueblue-documents-prod` (AES-256, versioning, public access blocked) |
 | Deploy Key | trueblue-staging-ec2 (read-only, ED25519) |
 | GitHub Repo | sharozhaseeb/true-blue-platform (PRIVATE) |
-| IMDSv2 | Enforced |
+| IMDSv2 | Enforced (hop limit 2 for Docker) |
 
 ## Transport Security
 
@@ -86,7 +86,7 @@ Firm codes for registration: `acme-tax`, `best-tax`
 | Item | Milestone | Details |
 |---|---|---|
 | **S3 CORS update** | M2 | Add Elastic IP to S3 bucket CORS `AllowedOrigins` when S3 integration is built. Current CORS only allows `localhost:3000`. Command: `aws s3api put-bucket-cors --bucket trueblue-documents-prod --cors-configuration '{"CORSRules":[{"AllowedHeaders":["*"],"AllowedMethods":["GET","PUT","POST","DELETE"],"AllowedOrigins":["http://localhost:3000","http://54.208.102.72"],"ExposeHeaders":["ETag"],"MaxAgeSeconds":3600}]}'` |
-| **IAM Instance Profile policies** | M2 (done) | S3 policy `TrueBlue-S3-Documents-M2` attached: PutObject + DeleteObject scoped to `trueblue-documents-prod/*/documents/*`. GetObject and ListBucket will be added in M3/M5. CloudWatch Logs policy still needed. |
+| **IAM Instance Profile policies** | M2 (done) | S3 policy `TrueBlue-S3-Documents-M2` attached: PutObject + DeleteObject scoped to `trueblue-documents-prod/*/documents/*`. GetObject and ListBucket will be added in M3/M5. IMDSv2 hop limit increased to 2 so Docker containers can reach the metadata service for IAM credentials. CloudWatch Logs policy still needed. |
 | **Database backups** | M2+ | Add cron job: `0 2 * * * docker exec $(docker ps -qf "name=db") pg_dump -U trueblue trueblue \| gzip > /home/ec2-user/backups/trueblue-$(date +\%Y\%m\%d).sql.gz`. Rotate backups older than 7 days. |
 | **SSL/TLS certificate** | M2 (pulled forward) | Requires domain name. Use Let's Encrypt via certbot. Update `nginx/nginx.conf` to listen on 443, redirect 80->443. Set `USE_SECURE_COOKIES=true` in `.env`. Open port 443 in security group `sg-0a378d48da47d1008`. Pulled forward from M4 because M2 handles real tax documents. |
 | **Domain name + DNS** | M4 | Point domain A record to `54.208.102.72`. Update `NEXT_PUBLIC_APP_URL` in `.env`. Update `server_name` in nginx config. |
@@ -108,6 +108,6 @@ Firm codes for registration: `acme-tax`, `best-tax`
 | **IAM Instance Profile** | Created with no policies (placeholder). Eliminates need for hardcoded AWS credentials on EC2. Policies added as features require them. |
 | **ED25519 deploy key** | Read-only GitHub access from EC2. More secure than RSA. No personal tokens on the server. |
 | **node:20-slim over node:20-alpine** | Alpine uses musl libc which is incompatible with Prisma 5 schema engine. Debian slim uses glibc and works correctly with `debian-openssl-3.0.x` binary target. |
-| **IMDSv2 enforced** | Prevents SSRF attacks that could steal EC2 instance credentials via the metadata service. |
+| **IMDSv2 enforced** | Prevents SSRF attacks that could steal EC2 instance credentials via the metadata service. Hop limit set to 2 (default 1 blocks Docker containers from reaching IMDS due to the extra network hop). |
 | **Lazy JWT secret initialization** | JWT secrets are lazily loaded on first use rather than at module level. Prevents build-time crashes when env vars aren't set (Docker build stage has no `.env`). Also removed `@prisma/client` import from `auth.ts` to avoid Edge Runtime issues in middleware. |
 | **fetchWithAuth singleton refresh** | Client-side fetch wrapper that intercepts 401 responses, refreshes the token, and retries. Uses a singleton promise to prevent concurrent 401s from triggering multiple refresh calls (token rotation would invalidate the second). |
