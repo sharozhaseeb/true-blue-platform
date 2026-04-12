@@ -34,6 +34,7 @@ COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
 COPY --from=builder /app/node_modules/pdf-parse ./node_modules/pdf-parse
+COPY --from=builder /app/node_modules/node-ensure ./node_modules/node-ensure
 COPY --from=builder /app/prisma ./prisma
 
 RUN chown -R nextjs:nodejs /app
