@@ -11,7 +11,7 @@
 | Elastic IP | `54.208.102.72` |
 | Elastic IP Allocation | `eipalloc-0797d3c7a5b8c9f2c` |
 | URL | http://54.208.102.72 |
-| Protocol | HTTP only (no SSL) |
+| Protocol | HTTP (SSL pulled forward to M2 — see Transport Security section below) |
 | Architecture | Docker Compose: PostgreSQL 16 + Next.js + Nginx |
 | Security Group | `sg-0a378d48da47d1008` (trueblue-staging-sg) |
 | Key Pair | trueblue-staging (ED25519) |
@@ -22,14 +22,19 @@
 | GitHub Repo | sharozhaseeb/true-blue-platform (PRIVATE) |
 | IMDSv2 | Enforced |
 
-## HTTP Security Warning
+## Transport Security
 
-Staging runs over **plain HTTP**. All traffic including passwords is transmitted unencrypted.
+**Current status:** Staging runs over **plain HTTP**. All traffic including passwords is transmitted unencrypted.
 
 - Use **throwaway passwords only**. Do NOT reuse real passwords.
 - Seed data passwords (`Admin123!`, `FirmAdmin1!`, `FirmUser1!`) are for testing only.
-- SSL/TLS will be added when a domain is configured (Milestone 4).
 - The `USE_SECURE_COOKIES` env var is set to `false` for HTTP staging.
+
+**M2 TLS requirement:** M2 introduces document upload (real client tax returns). Transmitting tax documents over plain HTTP is a compliance risk. SSL/TLS has been pulled forward from M4 to M2 Phase 0C:
+- Requires a domain/subdomain from the client pointing to 54.208.102.72
+- Let's Encrypt via certbot (free, auto-renewing)
+- If no domain available: restrict testing to sample PDFs only (not real client data) and document the risk
+- Once TLS is configured: set `USE_SECURE_COOKIES=true`, update nginx for 443, redirect 80→443
 
 ## Accessing the Server
 
@@ -81,9 +86,9 @@ Firm codes for registration: `acme-tax`, `best-tax`
 | Item | Milestone | Details |
 |---|---|---|
 | **S3 CORS update** | M2 | Add Elastic IP to S3 bucket CORS `AllowedOrigins` when S3 integration is built. Current CORS only allows `localhost:3000`. Command: `aws s3api put-bucket-cors --bucket trueblue-documents-prod --cors-configuration '{"CORSRules":[{"AllowedHeaders":["*"],"AllowedMethods":["GET","PUT","POST","DELETE"],"AllowedOrigins":["http://localhost:3000","http://54.208.102.72"],"ExposeHeaders":["ETag"],"MaxAgeSeconds":3600}]}'` |
-| **IAM Instance Profile policies** | M2 | Add S3 read/write policy scoped to `trueblue-documents-prod` bucket. Add CloudWatch Logs policy. Role `TrueBlue-EC2-Staging` exists but has no policies yet. |
+| **IAM Instance Profile policies** | M2 (done) | S3 policy `TrueBlue-S3-Documents-M2` attached: PutObject + DeleteObject scoped to `trueblue-documents-prod/*/documents/*`. GetObject and ListBucket will be added in M3/M5. CloudWatch Logs policy still needed. |
 | **Database backups** | M2+ | Add cron job: `0 2 * * * docker exec $(docker ps -qf "name=db") pg_dump -U trueblue trueblue \| gzip > /home/ec2-user/backups/trueblue-$(date +\%Y\%m\%d).sql.gz`. Rotate backups older than 7 days. |
-| **SSL/TLS certificate** | M4 | Requires domain name. Use Let's Encrypt via certbot. Update `nginx/nginx.conf` to listen on 443, redirect 80->443. Set `USE_SECURE_COOKIES=true` in `.env`. Open port 443 in security group `sg-0a378d48da47d1008`. |
+| **SSL/TLS certificate** | M2 (pulled forward) | Requires domain name. Use Let's Encrypt via certbot. Update `nginx/nginx.conf` to listen on 443, redirect 80->443. Set `USE_SECURE_COOKIES=true` in `.env`. Open port 443 in security group `sg-0a378d48da47d1008`. Pulled forward from M4 because M2 handles real tax documents. |
 | **Domain name + DNS** | M4 | Point domain A record to `54.208.102.72`. Update `NEXT_PUBLIC_APP_URL` in `.env`. Update `server_name` in nginx config. |
 | **RDS migration** | M4 | Migrate from Docker PostgreSQL to AWS RDS. Export with `pg_dump`, import to RDS. Update `DATABASE_URL` in `.env`. Remove `db` service from `docker-compose.prod.yml`. Enable RDS encryption at rest + automated backups. |
 | **CI/CD pipeline** | M3+ | GitHub Actions: on push to main -> SSH to EC2, pull, rebuild, restart. Or use ECR + CodeDeploy for zero-downtime deployments. |

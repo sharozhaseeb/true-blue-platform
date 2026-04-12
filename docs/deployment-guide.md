@@ -26,7 +26,7 @@ Complete step-by-step procedure for deploying the platform to AWS EC2 staging.
 | Elastic IP Allocation | `eipalloc-0797d3c7a5b8c9f2c` |
 | Security Group | `sg-0a378d48da47d1008` (trueblue-staging-sg) |
 | Key Pair | trueblue-staging (ED25519, `~/.ssh/trueblue-staging.pem`) |
-| IAM Role | TrueBlue-EC2-Staging (no policies yet — placeholder for future S3 access) |
+| IAM Role | TrueBlue-EC2-Staging (policy: TrueBlue-S3-Documents-M2 — PutObject + DeleteObject on `*/documents/*`) |
 | Instance Profile | TrueBlue-EC2-Staging |
 | S3 Bucket | `trueblue-documents-prod` (AES-256, versioning, public access blocked) |
 | Deploy Key | trueblue-staging-ec2 (read-only, ED25519) |

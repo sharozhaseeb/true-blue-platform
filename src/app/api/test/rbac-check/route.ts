@@ -12,6 +12,7 @@ const ALL_PERMISSIONS: Permission[] = [
   "view_firm_data",
   "upload_documents",
   "query_documents",
+  "delete_documents",
 ];
 
 export async function GET() {

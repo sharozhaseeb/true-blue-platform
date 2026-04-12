@@ -6,7 +6,8 @@ export type Permission =
   | "manage_firm_users"
   | "view_firm_data"
   | "upload_documents"
-  | "query_documents";
+  | "query_documents"
+  | "delete_documents";
 
 const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
   PLATFORM_ADMIN: [
@@ -16,12 +17,14 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "view_firm_data",
     "upload_documents",
     "query_documents",
+    "delete_documents",
   ],
   FIRM_ADMIN: [
     "manage_firm_users",
     "view_firm_data",
     "upload_documents",
     "query_documents",
+    "delete_documents",
   ],
   FIRM_USER: ["view_firm_data", "upload_documents", "query_documents"],
 };

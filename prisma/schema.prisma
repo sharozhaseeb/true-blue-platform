@@ -14,14 +14,22 @@ enum Role {
   FIRM_USER
 }
 
+enum DocumentStatus {
+  UPLOADING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
 model Firm {
-  id        String   @id @default(cuid())
+  id        String     @id @default(cuid())
   name      String
-  slug      String   @unique
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  slug      String     @unique
+  isActive  Boolean    @default(true)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
   users     User[]
+  documents Document[]
 
   @@map("firms")
 }
@@ -39,6 +47,7 @@ model User {
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
   refreshTokens RefreshToken[]
+  documents     Document[]
 
   @@index([firmId])
   @@map("users")
@@ -46,7 +55,7 @@ model User {
 
 model RefreshToken {
   id        String   @id @default(cuid())
-  // TODO: Either use this field for double-verification or remove it in M2
+  // TODO: Either use this field for double-verification or remove it
   token     String   @unique
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -56,4 +65,45 @@ model RefreshToken {
   @@index([token])
   @@index([userId])
   @@map("refresh_tokens")
+}
+
+model Document {
+  id           String         @id @default(cuid())
+  filename     String
+  originalName String
+  s3Key        String
+  s3Bucket     String
+  mimeType     String
+  fileSize     Int
+  pageCount    Int?
+  status       DocumentStatus @default(UPLOADING)
+  errorMessage String?
+  firmId       String
+  firm         Firm           @relation(fields: [firmId], references: [id])
+  uploadedById String
+  uploadedBy   User           @relation(fields: [uploadedById], references: [id])
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  chunks       DocumentChunk[]
+
+  @@index([firmId])
+  @@index([uploadedById])
+  @@index([status])
+  @@map("documents")
+}
+
+model DocumentChunk {
+  id            String   @id @default(cuid())
+  documentId    String
+  document      Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  content       String   @db.Text
+  pageNumber    Int
+  chunkIndex    Int
+  tokenEstimate Int?
+  metadata      Json?
+  createdAt     DateTime @default(now())
+
+  @@index([documentId])
+  @@unique([documentId, chunkIndex])
+  @@map("document_chunks")
 }
