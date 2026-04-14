@@ -51,65 +51,325 @@ export function cleanPageText(raw: string): string {
 }
 
 /**
+ * A form is detected only when EVERY pattern in `required` matches the page.
+ *
+ * Each rule combines three kinds of evidence, all of which must be present:
+ *
+ * 1. A form-header signature (e.g. `Schedule B (Form 1040)` or the exact
+ *    title line) — this is a layout artifact that only appears on the real
+ *    form page. Body prose on a neighbouring page will say "from Schedule B"
+ *    or "(Amended U.S. Individual Income Tax Return)" but never the bracketed
+ *    header notation.
+ * 2. The official title in case-sensitive Title Case. Real forms render the
+ *    title as a heading; body references embed it in lowercase sentences
+ *    (e.g. "credit for child and dependent care expenses from Form 2441").
+ * 3. The form-specific OMB control number. Real IRS form pages carry the
+ *    "OMB No. 1545-xxxx" marker; worksheets, filing instructions, state
+ *    forms and the IRS e-file acknowledgement (Form 9325) do not.
+ *
+ * This combination is what keeps pages with cross-references — Form 1040
+ * page 2 talking about Schedule A, Schedule 3 referencing Form 2441,
+ * Schedule 2 referencing Schedule SE — from being falsely tagged.
+ */
+type FormRule = {
+  formType: string;
+  required: RegExp[];
+};
+
+// Shared OMB markers. Every rule needs at least one so that body references
+// on non-form pages (worksheets, filing instructions, diagnostics) cannot
+// satisfy the rule.
+const OMB_1040 = /OMB No\.?\s*1545-0074/;
+const OMB_1065 = /OMB No\.?\s*1545-0123/;
+const OMB_1120 = /OMB No\.?\s*1545-0123/;
+const OMB_990 = /OMB No\.?\s*1545-0047/;
+const OMB_941 = /OMB No\.?\s*1545-0029/;
+const OMB_W2 = /OMB No\.?\s*1545-0008/;
+const OMB_W9 = /OMB No\.?\s*1545-1621/;
+const OMB_1099_MISC = /OMB No\.?\s*1545-0115/;
+const OMB_1099_NEC = /OMB No\.?\s*1545-0116/;
+const OMB_1099_INT = /OMB No\.?\s*1545-0112/;
+const OMB_1099_DIV = /OMB No\.?\s*1545-0110/;
+const OMB_1099_R = /OMB No\.?\s*1545-0119/;
+const OMB_1099_B = /OMB No\.?\s*1545-0715/;
+const OMB_1099_K = /OMB No\.?\s*1545-2205/;
+const OMB_4562 = /OMB No\.?\s*1545-0172/;
+
+const FORM_RULES: FormRule[] = [
+  // Specific 1040 variants — checked before the generic 1040 rule.
+  // Titles are case-sensitive so "Amended U.S. Individual Income Tax Return"
+  // inside lowercase body text no longer trips the detector on 9325 pages.
+  {
+    formType: "Form 1040-SR",
+    required: [
+      /\b1040[-\s]?SR\b/i,
+      /U\.S\. Tax Return for Seniors/,
+      OMB_1040,
+    ],
+  },
+  {
+    formType: "Form 1040-NR",
+    required: [
+      /\b1040[-\s]?NR\b/i,
+      /U\.S\. Nonresident Alien Income Tax Return/,
+      OMB_1040,
+    ],
+  },
+  {
+    formType: "Form 1040-X",
+    required: [
+      /\b1040[-\s]?X\b/i,
+      /Amended U\.S\. Individual Income Tax Return/,
+      OMB_1040,
+    ],
+  },
+
+  // Main return forms
+  {
+    formType: "Form 1040",
+    required: [
+      /\b1040\b/,
+      /U\.S\. Individual Income Tax Return/,
+      OMB_1040,
+    ],
+  },
+  {
+    formType: "Form 1120-S",
+    required: [
+      /\b1120[-\s]?S\b/i,
+      /U\.S\. Income Tax Return for an S Corporation/,
+      OMB_1120,
+    ],
+  },
+  {
+    formType: "Form 1120",
+    required: [
+      /\b1120\b/,
+      /U\.S\. Corporation Income Tax Return/,
+      OMB_1120,
+    ],
+  },
+  {
+    formType: "Form 1065",
+    required: [
+      /\b1065\b/,
+      /U\.S\. Return of Partnership Income/,
+      OMB_1065,
+    ],
+  },
+  {
+    formType: "Form 990",
+    required: [
+      /\b990\b/,
+      /Return of Organization Exempt [Ff]rom Income Tax/,
+      OMB_990,
+    ],
+  },
+  {
+    formType: "Form 941",
+    required: [
+      /\b941\b/,
+      /Employer['\u2019]?s QUARTERLY Federal Tax Return/,
+      OMB_941,
+    ],
+  },
+
+  // Schedules attached to Form 1040 — all share OMB 1545-0074 with the
+  // parent return, so the form-header signature `Schedule X (Form 1040)`
+  // is what discriminates the real page from a body reference.
+  //
+  // K-1 keeps a structural cue ("Final K-1" or "Amended K-1") so that the
+  // Schedule K-3 notification page — which mentions Schedule K-1 once in
+  // passing — does not false-positive.
+  {
+    formType: "Schedule K-1",
+    required: [
+      /Schedule\s+K-?1\s*\(Form\s+1065\)/i,
+      /(?:Partner|Shareholder)['\u2019]?s Share/,
+      /Final K-?1|Amended K-?1/,
+      OMB_1065,
+    ],
+  },
+  {
+    formType: "Schedule A",
+    required: [
+      /Schedule\s+A\s*\(Form\s+1040\)/i,
+      /Itemized Deductions/,
+      OMB_1040,
+    ],
+  },
+  {
+    formType: "Schedule B",
+    required: [
+      /Schedule\s+B\s*\(Form\s+1040\)/i,
+      /Interest and Ordinary Dividends/,
+      OMB_1040,
+    ],
+  },
+  {
+    formType: "Schedule C",
+    required: [
+      /Schedule\s+C\s*\(Form\s+1040\)/i,
+      /Profit or Loss From Business/,
+      OMB_1040,
+    ],
+  },
+  {
+    formType: "Schedule D",
+    required: [
+      /Schedule\s+D\s*\(Form\s+1040\)/i,
+      /Capital Gains and Losses/,
+      OMB_1040,
+    ],
+  },
+  {
+    formType: "Schedule E",
+    required: [
+      /Schedule\s+E\s*\(Form\s+1040\)/i,
+      /Supplemental Income and Loss/,
+      OMB_1040,
+    ],
+  },
+  {
+    formType: "Schedule F",
+    required: [
+      /Schedule\s+F\s*\(Form\s+1040\)/i,
+      /Profit or Loss From Farming/,
+      OMB_1040,
+    ],
+  },
+  {
+    formType: "Schedule SE",
+    required: [
+      /Schedule\s+SE\s*\(Form\s+1040\)/i,
+      /Self-Employment Tax/,
+      OMB_1040,
+    ],
+  },
+
+  // Wage and information returns
+  {
+    formType: "W-2",
+    required: [/\bW-?2\b/, /Wage and Tax Statement/, OMB_W2],
+  },
+  {
+    formType: "W-9",
+    required: [
+      /\bW-?9\b/,
+      /Request for Taxpayer Identification Number/,
+      OMB_W9,
+    ],
+  },
+  {
+    formType: "1099-MISC",
+    required: [
+      /\b1099[-\s]?MISC\b/i,
+      /Miscellaneous (?:Information|Income)/,
+      OMB_1099_MISC,
+    ],
+  },
+  {
+    formType: "1099-NEC",
+    required: [
+      /\b1099[-\s]?NEC\b/i,
+      /Nonemployee Compensation/,
+      OMB_1099_NEC,
+    ],
+  },
+  {
+    formType: "1099-INT",
+    required: [/\b1099[-\s]?INT\b/i, /Interest Income/, OMB_1099_INT],
+  },
+  {
+    formType: "1099-DIV",
+    required: [
+      /\b1099[-\s]?DIV\b/i,
+      /Dividends and Distributions/,
+      OMB_1099_DIV,
+    ],
+  },
+  {
+    formType: "1099-R",
+    required: [
+      /\b1099[-\s]?R\b/i,
+      /Distributions [Ff]rom Pensions/,
+      OMB_1099_R,
+    ],
+  },
+  {
+    formType: "1099-B",
+    required: [
+      /\b1099[-\s]?B\b/i,
+      /Proceeds [Ff]rom Broker/,
+      OMB_1099_B,
+    ],
+  },
+  {
+    formType: "1099-K",
+    required: [
+      /\b1099[-\s]?K\b/i,
+      /Payment Card and Third Party Network/,
+      OMB_1099_K,
+    ],
+  },
+
+  // Other common forms attached to Form 1040. These all share 1545-0074,
+  // so the form-number marker has to appear adjacent to the title — a
+  // body reference like "from Form 2441" is filtered because the page
+  // will not also contain the official Title-Case title.
+  {
+    formType: "Form 8829",
+    required: [
+      /\b8829\b/,
+      /Expenses for Business Use of Your Home/,
+      OMB_1040,
+    ],
+  },
+  {
+    formType: "Form 4562",
+    required: [/\b4562\b/, /Depreciation and Amortization/, OMB_4562],
+  },
+  {
+    formType: "Form 8949",
+    required: [
+      /\b8949\b/,
+      /Sales and Other Dispositions of Capital Assets/,
+      OMB_1040,
+    ],
+  },
+  {
+    formType: "Form 6251",
+    required: [/\b6251\b/, /Alternative Minimum Tax/, OMB_1040],
+  },
+  {
+    formType: "Form 2441",
+    required: [
+      /\b2441\b/,
+      /Child and Dependent Care Expenses/,
+      OMB_1040,
+    ],
+  },
+  {
+    formType: "Form 8812",
+    required: [/\b8812\b/, /Credits for Qualifying Children/, OMB_1040],
+  },
+  {
+    formType: "Form 8863",
+    required: [/\b8863\b/, /Education Credits/, OMB_1040],
+  },
+];
+
+/**
  * Detect IRS form types from page text.
- * Returns the detected form type or null if none found.
+ *
+ * Returns the first form whose required patterns all match. Body-text
+ * mentions of a form on a different form's page do not match because the
+ * official IRS title is required alongside the form number.
  */
 export function detectFormType(pageText: string): string | null {
-  // Order matters: check more specific patterns first
-  const formPatterns: [RegExp, string][] = [
-    // Schedules (check before generic "Form 1040")
-    [/Schedule\s+A\b/i, "Schedule A"],
-    [/Schedule\s+B\b/i, "Schedule B"],
-    [/Schedule\s+C\b/i, "Schedule C"],
-    [/Schedule\s+D\b/i, "Schedule D"],
-    [/Schedule\s+E\b/i, "Schedule E"],
-    [/Schedule\s+F\b/i, "Schedule F"],
-    [/Schedule\s+K-?1\b/i, "Schedule K-1"],
-    [/Schedule\s+SE\b/i, "Schedule SE"],
-
-    // Specific 1040 variants
-    [/Form\s+1040[-\s]?SR\b/i, "Form 1040-SR"],
-    [/Form\s+1040[-\s]?NR\b/i, "Form 1040-NR"],
-    [/Form\s+1040[-\s]?X\b/i, "Form 1040-X"],
-
-    // Main forms
-    [/Form\s+1040\b/i, "Form 1040"],
-    [/Form\s+1120[-\s]?S\b/i, "Form 1120-S"],
-    [/Form\s+1120\b/i, "Form 1120"],
-    [/Form\s+1065\b/i, "Form 1065"],
-    [/Form\s+990\b/i, "Form 990"],
-    [/Form\s+941\b/i, "Form 941"],
-
-    // Information returns
-    [/Form\s+W-?2\b/i, "W-2"],
-    [/Form\s+W-?9\b/i, "W-9"],
-    [/\bW-?2\b(?:\s+Wage)/i, "W-2"],
-    [/Form\s+1099[-\s]?MISC\b/i, "1099-MISC"],
-    [/Form\s+1099[-\s]?NEC\b/i, "1099-NEC"],
-    [/Form\s+1099[-\s]?INT\b/i, "1099-INT"],
-    [/Form\s+1099[-\s]?DIV\b/i, "1099-DIV"],
-    [/Form\s+1099[-\s]?R\b/i, "1099-R"],
-    [/Form\s+1099[-\s]?B\b/i, "1099-B"],
-    [/Form\s+1099[-\s]?K\b/i, "1099-K"],
-    [/Form\s+1099\b/i, "1099"],
-
-    // K-1 variants
-    [/Schedule\s+K-?1\s*\(Form\s+1065\)/i, "Schedule K-1 (Form 1065)"],
-    [/Schedule\s+K-?1\s*\(Form\s+1120[-\s]?S\)/i, "Schedule K-1 (Form 1120-S)"],
-
-    // Other common forms
-    [/Form\s+8829\b/i, "Form 8829"],
-    [/Form\s+4562\b/i, "Form 4562"],
-    [/Form\s+8949\b/i, "Form 8949"],
-    [/Form\s+6251\b/i, "Form 6251"],
-    [/Form\s+2441\b/i, "Form 2441"],
-    [/Form\s+8812\b/i, "Form 8812"],
-    [/Form\s+8863\b/i, "Form 8863"],
-  ];
-
-  for (const [pattern, formType] of formPatterns) {
-    if (pattern.test(pageText)) {
-      return formType;
+  for (const rule of FORM_RULES) {
+    if (rule.required.every((re) => re.test(pageText))) {
+      return rule.formType;
     }
   }
 

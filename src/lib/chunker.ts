@@ -69,17 +69,70 @@ export function splitAtParagraphBoundary(
   return chunks;
 }
 
+const WHITESPACE_RE = /\s/;
+
 /**
- * Get the last N tokens worth of text for overlap.
+ * Walk `position` to a whitespace boundary inside (lowerBound, upperBound).
+ *
+ * direction "backward" prefers the nearest whitespace at-or-before `position`,
+ * which keeps a chunk near its target size. direction "forward" returns the
+ * first non-whitespace character after the next whitespace run, which
+ * guarantees text[result - 1] is whitespace (so a chunk that starts at the
+ * returned index does not begin mid-token).
+ *
+ * If no whitespace exists in the search direction the function falls back to
+ * the opposite direction; if still nothing is found it returns the original
+ * `position`. The result is always clamped to (lowerBound, upperBound].
+ */
+function walkToTokenBoundary(
+  text: string,
+  position: number,
+  lowerBound: number,
+  upperBound: number,
+  direction: "forward" | "backward"
+): number {
+  const cap = Math.min(upperBound, text.length);
+  if (direction === "backward") {
+    for (let i = Math.min(position, cap); i > lowerBound; i--) {
+      if (WHITESPACE_RE.test(text[i])) return i;
+    }
+    for (let i = Math.min(position, cap) + 1; i < cap; i++) {
+      if (WHITESPACE_RE.test(text[i])) return i;
+    }
+    return position;
+  }
+
+  let i = Math.max(lowerBound, position);
+  if (i >= cap) return cap;
+
+  if (WHITESPACE_RE.test(text[i])) {
+    while (i < cap && WHITESPACE_RE.test(text[i])) i++;
+    return i;
+  }
+
+  while (i < cap && !WHITESPACE_RE.test(text[i])) i++;
+  while (i < cap && WHITESPACE_RE.test(text[i])) i++;
+  return i;
+}
+
+/**
+ * Get the last N tokens worth of text for overlap, anchored at a whitespace
+ * boundary so the overlap never begins mid-token.
  */
 function getOverlapText(text: string, overlapTokens: number): string {
   const charCount = overlapTokens * 4; // Reverse the token estimation
   if (text.length <= charCount) return text;
-  return text.substring(text.length - charCount);
+  const target = text.length - charCount;
+  const anchored = walkToTokenBoundary(text, target, 0, text.length, "forward");
+  return anchored >= text.length ? "" : text.substring(anchored);
 }
 
 /**
  * Force-split text by character length when paragraph splitting isn't possible.
+ *
+ * Both chunk endings and overlap starts are anchored to whitespace boundaries
+ * so multi-character tokens (numbers, currency values, form line refs) are
+ * never sliced in half.
  */
 function forceSplitByLength(
   text: string,
@@ -94,20 +147,26 @@ function forceSplitByLength(
   while (start < text.length) {
     let end = Math.min(start + maxChars, text.length);
 
-    // Try to break at a space boundary
     if (end < text.length) {
-      const lastSpace = text.lastIndexOf(" ", end);
-      if (lastSpace > start + maxChars * 0.5) {
-        end = lastSpace;
-      }
+      end = walkToTokenBoundary(text, end, start + 1, text.length, "backward");
     }
 
     chunks.push(text.substring(start, end).trim());
 
     if (end >= text.length) break;
 
-    // Next chunk starts with overlap from end of current
-    const nextStart = end - overlapChars;
+    const overlapTarget = end - overlapChars;
+    let nextStart = walkToTokenBoundary(
+      text,
+      overlapTarget,
+      start + 1,
+      end,
+      "forward"
+    );
+    if (nextStart >= end) {
+      nextStart = end;
+    }
+
     // Guarantee forward progress: never go backwards
     start = Math.max(nextStart, start + 1);
   }
