@@ -2,6 +2,7 @@ import { SignJWT, jwtVerify } from "jose";
 import { serialize, parse } from "cookie";
 
 export interface AccessTokenPayload {
+  tokenUse: "access";
   userId: string;
   email: string;
   role: string;
@@ -9,6 +10,7 @@ export interface AccessTokenPayload {
 }
 
 interface RefreshTokenPayload {
+  tokenUse: "refresh";
   userId: string;
   tokenId: string;
 }
@@ -50,9 +52,9 @@ function getExpiry(envVar: string, fallback: number): number {
 const IS_PRODUCTION = process.env.USE_SECURE_COOKIES === "true";
 
 export async function signAccessToken(
-  payload: AccessTokenPayload
+  payload: Omit<AccessTokenPayload, "tokenUse">
 ): Promise<string> {
-  return new SignJWT(payload as unknown as Record<string, unknown>)
+  return new SignJWT({ ...payload, tokenUse: "access" })
     .setProtectedHeader({ alg: "HS256" })
     .setExpirationTime(`${getExpiry("JWT_ACCESS_EXPIRY", 900)}s`)
     .setIssuedAt()
@@ -60,9 +62,9 @@ export async function signAccessToken(
 }
 
 export async function signRefreshToken(
-  payload: RefreshTokenPayload
+  payload: Omit<RefreshTokenPayload, "tokenUse">
 ): Promise<string> {
-  return new SignJWT(payload as unknown as Record<string, unknown>)
+  return new SignJWT({ ...payload, tokenUse: "refresh" })
     .setProtectedHeader({ alg: "HS256" })
     .setExpirationTime(`${getExpiry("JWT_REFRESH_EXPIRY", 604800)}s`)
     .setIssuedAt()
@@ -73,6 +75,9 @@ export async function verifyAccessToken(
   token: string
 ): Promise<AccessTokenPayload> {
   const { payload } = await jwtVerify(token, getAccessSecret());
+  if (payload.tokenUse !== "access") {
+    throw new Error("Invalid access token type");
+  }
   return payload as unknown as AccessTokenPayload;
 }
 
@@ -80,6 +85,9 @@ export async function verifyRefreshToken(
   token: string
 ): Promise<RefreshTokenPayload> {
   const { payload } = await jwtVerify(token, getRefreshSecret());
+  if (payload.tokenUse !== "refresh") {
+    throw new Error("Invalid refresh token type");
+  }
   return payload as unknown as RefreshTokenPayload;
 }
 

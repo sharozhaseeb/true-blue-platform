@@ -7,6 +7,7 @@ import {
   payloadTooLarge,
   unsupportedMediaType,
   tooManyRequests,
+  unauthorized,
   internalError,
 } from "@/lib/errors";
 import {
@@ -14,8 +15,17 @@ import {
   validatePdfMagicBytes,
   sanitizeFilename,
 } from "@/lib/validation";
-import { uploadToS3, getS3Bucket, buildS3Key } from "@/lib/s3";
+import {
+  uploadToS3,
+  deleteFromS3,
+  getS3Bucket,
+  buildS3Key,
+} from "@/lib/s3";
 import { processDocument } from "@/lib/document-pipeline";
+import {
+  isTextractPipelineEnabled,
+  queueTextractDocument,
+} from "@/lib/textract-pipeline";
 import { prisma } from "@/lib/prisma";
 
 const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20MB
@@ -42,6 +52,9 @@ export async function POST(request: NextRequest) {
   try {
     // Step 3: Get request context
     const ctx = await getRequestContext();
+    if (!ctx.isAuthenticated) {
+      return unauthorized();
+    }
 
     // Step 4: Permission check
     if (!hasPermission(ctx.role, "upload_documents")) {
@@ -121,6 +134,29 @@ export async function POST(request: NextRequest) {
       // Step 12: Upload buffer to S3
       await uploadToS3(bucket, s3Key, buffer, "application/pdf");
 
+      if (isTextractPipelineEnabled()) {
+        const queued = await queueTextractDocument({
+          documentId: document.id,
+          firmId: ctx.firmId,
+          s3Bucket: bucket,
+          s3Key,
+          filename: sanitizedName,
+        });
+
+        return Response.json({
+          document: {
+            id: document.id,
+            originalName: file.name,
+            fileSize: file.size,
+            pageCount: null,
+            status: "PROCESSING",
+            chunkCount: 0,
+            baseArtifactId: queued.artifactId,
+            providerJobId: queued.providerJobId,
+          },
+        });
+      }
+
       // Step 13: Update status to PROCESSING
       await prisma.document.update({
         where: { id: document.id },
@@ -147,6 +183,14 @@ export async function POST(request: NextRequest) {
       });
     } catch {
       // Processing failed — document already marked FAILED by pipeline
+      try {
+        await deleteFromS3(bucket, s3Key);
+        await prisma.document.delete({
+          where: { id: document.id },
+        });
+      } catch {
+        console.error(`[upload] Failed to clean failed upload ${document.id}`);
+      }
       return internalError("Document processing failed");
     }
   } catch (err) {

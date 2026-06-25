@@ -1,0 +1,93 @@
+{
+  "DocumentMetadata": { "Pages": 2 },
+  "Blocks": [
+    {
+      "BlockType": "PAGE",
+      "Id": "mp-page-2",
+      "Page": 2,
+      "Geometry": { "BoundingBox": { "Left": 0, "Top": 0, "Width": 1, "Height": 1 } },
+      "Relationships": [{ "Type": "CHILD", "Ids": ["mp-line-2", "mp-table-1", "mp-selection-1", "mp-layout-2"] }]
+    },
+    {
+      "BlockType": "LINE",
+      "Id": "mp-line-2",
+      "Page": 2,
+      "Text": "Summary Page Two",
+      "Confidence": 99,
+      "Geometry": { "BoundingBox": { "Left": 0.1, "Top": 0.05, "Width": 0.4, "Height": 0.03 } },
+      "Relationships": [{ "Type": "CHILD", "Ids": ["mp-word-schedule"] }]
+    },
+    {
+      "BlockType": "WORD",
+      "Id": "mp-word-schedule",
+      "Page": 2,
+      "Text": "Summary",
+      "Confidence": 99,
+      "Geometry": { "BoundingBox": { "Left": 0.1, "Top": 0.05, "Width": 0.22, "Height": 0.03 } }
+    },
+    {
+      "BlockType": "TABLE",
+      "Id": "mp-table-1",
+      "Page": 2,
+      "Confidence": 97,
+      "Geometry": { "BoundingBox": { "Left": 0.1, "Top": 0.2, "Width": 0.5, "Height": 0.12 } },
+      "Relationships": [{ "Type": "CHILD", "Ids": ["mp-cell-1", "mp-cell-2"] }]
+    },
+    {
+      "BlockType": "CELL",
+      "Id": "mp-cell-1",
+      "Page": 2,
+      "RowIndex": 1,
+      "ColumnIndex": 1,
+      "RowSpan": 1,
+      "ColumnSpan": 1,
+      "Confidence": 96,
+      "Geometry": { "BoundingBox": { "Left": 0.1, "Top": 0.22, "Width": 0.2, "Height": 0.04 } },
+      "Relationships": [{ "Type": "CHILD", "Ids": ["mp-word-income"] }]
+    },
+    {
+      "BlockType": "CELL",
+      "Id": "mp-cell-2",
+      "Page": 2,
+      "RowIndex": 1,
+      "ColumnIndex": 2,
+      "RowSpan": 1,
+      "ColumnSpan": 1,
+      "Confidence": 96,
+      "Geometry": { "BoundingBox": { "Left": 0.35, "Top": 0.22, "Width": 0.2, "Height": 0.04 } },
+      "Relationships": [{ "Type": "CHILD", "Ids": ["mp-word-redacted-amount"] }]
+    },
+    {
+      "BlockType": "WORD",
+      "Id": "mp-word-income",
+      "Page": 2,
+      "Text": "Income",
+      "Confidence": 96,
+      "Geometry": { "BoundingBox": { "Left": 0.1, "Top": 0.22, "Width": 0.1, "Height": 0.03 } }
+    },
+    {
+      "BlockType": "WORD",
+      "Id": "mp-word-redacted-amount",
+      "Page": 2,
+      "Text": "REDACTED_AMOUNT",
+      "Confidence": 96,
+      "Geometry": { "BoundingBox": { "Left": 0.35, "Top": 0.22, "Width": 0.18, "Height": 0.03 } }
+    },
+    {
+      "BlockType": "SELECTION_ELEMENT",
+      "Id": "mp-selection-1",
+      "Page": 2,
+      "SelectionStatus": "SELECTED",
+      "Confidence": 94,
+      "Geometry": { "BoundingBox": { "Left": 0.1, "Top": 0.4, "Width": 0.02, "Height": 0.02 } }
+    },
+    {
+      "BlockType": "LAYOUT_TITLE",
+      "Id": "mp-layout-2",
+      "Page": 2,
+      "Confidence": 99,
+      "Geometry": { "BoundingBox": { "Left": 0.1, "Top": 0.04, "Width": 0.4, "Height": 0.05 } },
+      "Relationships": [{ "Type": "CHILD", "Ids": ["mp-line-2"] }]
+    }
+  ]
+}

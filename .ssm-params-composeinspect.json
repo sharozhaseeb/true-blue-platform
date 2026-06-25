@@ -1,0 +1,12 @@
+{
+    "commands":  [
+                     "set -euo pipefail",
+                     "cd /opt/trueblue",
+                     "echo COMPOSE_IMAGE_LINES",
+                     "grep -nE \"image:|build:|APP_IMAGE|MIGRATE_IMAGE|WORKER_IMAGE\" docker-compose.prod.yml",
+                     "echo CONFIG_IMAGES",
+                     "docker compose -f docker-compose.prod.yml config | grep -E \"image:\"",
+                     "echo FILE_HEAD",
+                     "sed -n \"1,160p\" docker-compose.prod.yml"
+                 ]
+}

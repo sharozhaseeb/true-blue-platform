@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Colors
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
@@ -9,6 +8,8 @@ NC='\033[0m'
 
 COMPOSE_FILE="docker-compose.prod.yml"
 PROJECT="trueblue-test"
+APP_IMAGE="trueblue-test-app:local"
+MIGRATE_IMAGE="trueblue-test-migrate:local"
 
 log() { echo -e "${GREEN}[TEST]${NC} $1"; }
 warn() { echo -e "${YELLOW}[WARN]${NC} $1"; }
@@ -17,19 +18,18 @@ fail() { echo -e "${RED}[FAIL]${NC} $1"; exit 1; }
 cleanup() {
     log "Cleaning up..."
     docker compose -p "$PROJECT" -f "$COMPOSE_FILE" down -v --remove-orphans 2>/dev/null || true
+    docker image rm "$APP_IMAGE" "$MIGRATE_IMAGE" >/dev/null 2>&1 || true
+    rm -f .env.test /tmp/trueblue-test-login-response.json
     log "Cleanup complete."
 }
 
 trap cleanup EXIT
 
-# Check Docker is running
 docker info > /dev/null 2>&1 || fail "Docker is not running"
 
 log "Starting production build test..."
 
-# Create test .env if not exists
-if [ ! -f .env.test ]; then
-    cat > .env.test << 'EOF'
+cat > .env.test <<'EOF'
 DATABASE_URL=postgresql://trueblue:testpass123@db:5432/trueblue?schema=public
 POSTGRES_USER=trueblue
 POSTGRES_PASSWORD=testpass123
@@ -41,19 +41,23 @@ JWT_REFRESH_EXPIRY=604800
 NEXT_PUBLIC_APP_URL=http://localhost
 NODE_ENV=production
 USE_SECURE_COOKIES=false
+AWS_REGION=us-east-1
+AWS_S3_BUCKET=trueblue-documents-test
+APP_IMAGE=trueblue-test-app:local
+MIGRATE_IMAGE=trueblue-test-migrate:local
 EOF
-fi
 
-# Step 1: Build the Docker image
-log "Building production Docker image (this may take a few minutes)..."
-docker compose -p "$PROJECT" -f "$COMPOSE_FILE" --env-file .env.test build --no-cache || fail "Docker build failed"
-echo -e "${GREEN}[PASS]${NC} Docker image built successfully"
+log "Building production app image (this may take a few minutes)..."
+docker buildx build --platform linux/amd64 --target runner -t "$APP_IMAGE" --load . || fail "App image build failed"
+echo -e "${GREEN}[PASS]${NC} App image built successfully"
 
-# Step 2: Start database
+log "Building migration image..."
+docker buildx build --platform linux/amd64 --target migrate -t "$MIGRATE_IMAGE" --load . || fail "Migration image build failed"
+echo -e "${GREEN}[PASS]${NC} Migration image built successfully"
+
 log "Starting PostgreSQL..."
 docker compose -p "$PROJECT" -f "$COMPOSE_FILE" --env-file .env.test up -d db || fail "Failed to start database"
 
-# Wait for database
 log "Waiting for database to be ready..."
 for i in $(seq 1 30); do
     if docker compose -p "$PROJECT" -f "$COMPOSE_FILE" --env-file .env.test exec -T db pg_isready -U trueblue > /dev/null 2>&1; then
@@ -66,16 +70,13 @@ for i in $(seq 1 30); do
     sleep 1
 done
 
-# Step 3: Run migrations
 log "Running Prisma migrations..."
 docker compose -p "$PROJECT" -f "$COMPOSE_FILE" --env-file .env.test --profile setup run --rm migrate || fail "Migrations failed"
 echo -e "${GREEN}[PASS]${NC} Migrations completed"
 
-# Step 4: Start app and nginx
 log "Starting app and nginx..."
 docker compose -p "$PROJECT" -f "$COMPOSE_FILE" --env-file .env.test up -d app nginx || fail "Failed to start app/nginx"
 
-# Wait for app to respond
 log "Waiting for app to respond..."
 for i in $(seq 1 60); do
     STATUS=$(docker compose -p "$PROJECT" -f "$COMPOSE_FILE" --env-file .env.test exec -T nginx wget -q -O /dev/null -S http://app:3000 2>&1 | grep "HTTP/" | awk '{print $2}' || echo "")
@@ -91,34 +92,33 @@ for i in $(seq 1 60); do
     sleep 2
 done
 
-# Step 5: Test endpoints via nginx
 log "Testing endpoints via nginx..."
 
-# Test landing page
-LANDING=$(docker compose -p "$PROJECT" -f "$COMPOSE_FILE" --env-file .env.test exec -T nginx wget -q -O /dev/null -S http://localhost 2>&1 | grep "HTTP/" | awk '{print $2}' || echo "")
+LANDING=$(curl -s -o /dev/null -w "%{http_code}" http://localhost/ || echo "")
 if [ "$LANDING" = "200" ]; then
-    echo -e "${GREEN}[PASS]${NC} GET / → 200"
+    echo -e "${GREEN}[PASS]${NC} GET / -> 200"
 else
-    warn "GET / → $LANDING (expected 200)"
+    warn "GET / -> $LANDING (expected 200)"
 fi
 
-# Test login page
-LOGIN=$(docker compose -p "$PROJECT" -f "$COMPOSE_FILE" --env-file .env.test exec -T nginx wget -q -O /dev/null -S http://localhost/login 2>&1 | grep "HTTP/" | awk '{print $2}' || echo "")
+LOGIN=$(curl -s -o /dev/null -w "%{http_code}" http://localhost/login || echo "")
 if [ "$LOGIN" = "200" ]; then
-    echo -e "${GREEN}[PASS]${NC} GET /login → 200"
+    echo -e "${GREEN}[PASS]${NC} GET /login -> 200"
 else
-    warn "GET /login → $LOGIN (expected 200)"
+    warn "GET /login -> $LOGIN (expected 200)"
 fi
 
-# Test API auth (invalid creds should return 401)
-API_RESP=$(docker compose -p "$PROJECT" -f "$COMPOSE_FILE" --env-file .env.test exec -T nginx wget -q -O - --post-data='{"email":"bad@test.com","password":"wrong"}' --header='Content-Type: application/json' http://localhost/api/auth/login 2>&1 || echo "")
-if echo "$API_RESP" | grep -q "Invalid"; then
-    echo -e "${GREEN}[PASS]${NC} POST /api/auth/login (bad creds) → rejected"
+API_STATUS=$(curl -s -o /tmp/trueblue-test-login-response.json -w "%{http_code}" \
+    -H 'Content-Type: application/json' \
+    -d '{"email":"bad@test.com","password":"wrong"}' \
+    http://localhost/api/auth/login || echo "")
+
+if [ "$API_STATUS" = "401" ] && grep -q "Invalid" /tmp/trueblue-test-login-response.json 2>/dev/null; then
+    echo -e "${GREEN}[PASS]${NC} POST /api/auth/login (bad creds) -> 401"
 else
-    warn "POST /api/auth/login unexpected response"
+    warn "POST /api/auth/login unexpected response (status: $API_STATUS)"
 fi
 
-# Step 6: Check container health
 log "Checking container status..."
 docker compose -p "$PROJECT" -f "$COMPOSE_FILE" --env-file .env.test ps
 
@@ -127,6 +127,3 @@ echo -e "${GREEN}============================================${NC}"
 echo -e "${GREEN}  Production build test PASSED${NC}"
 echo -e "${GREEN}============================================${NC}"
 echo ""
-
-# Clean up test env file
-rm -f .env.test

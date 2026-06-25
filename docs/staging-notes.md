@@ -63,11 +63,23 @@ docker compose -f docker-compose.prod.yml ps
 ```bash
 ssh -i ~/.ssh/trueblue-staging.pem ec2-user@54.208.102.72
 cd true-blue-platform
-git pull
-docker compose -f docker-compose.prod.yml build --no-cache
-docker compose -f docker-compose.prod.yml up -d
-# If there are new migrations:
+
+# Update image refs in .env
+# APP_IMAGE=docker.io/<dockerhub-user>/true-blue-platform-app:<release-tag>
+# MIGRATE_IMAGE=docker.io/<dockerhub-user>/true-blue-platform-migrate:<release-tag>
+vi .env
+
+# Verify the image refs and pull the new images
+grep -E '^(APP_IMAGE|MIGRATE_IMAGE)=' .env
+docker compose -f docker-compose.prod.yml config | grep 'image:'
+docker compose -f docker-compose.prod.yml pull app migrate
+
+# If there are new migrations, take a backup first
+docker compose -f docker-compose.prod.yml exec db pg_dump -U trueblue trueblue | gzip > ~/backup-$(date +%Y%m%d-%H%M%S).sql.gz
 docker compose -f docker-compose.prod.yml --profile setup run --rm migrate
+
+# Refresh runtime services
+docker compose -f docker-compose.prod.yml up -d app nginx
 ```
 
 ## Test Accounts
@@ -93,6 +105,7 @@ Firm codes for registration: `acme-tax`, `best-tax`
 | **RDS migration** | M4 | Migrate from Docker PostgreSQL to AWS RDS. Export with `pg_dump`, import to RDS. Update `DATABASE_URL` in `.env`. Remove `db` service from `docker-compose.prod.yml`. Enable RDS encryption at rest + automated backups. |
 | **CI/CD pipeline** | M3+ | GitHub Actions: on push to main -> SSH to EC2, pull, rebuild, restart. Or use ECR + CodeDeploy for zero-downtime deployments. |
 | **CloudWatch monitoring** | M3+ | Install CloudWatch agent for memory/disk metrics. Configure alarms for CPU > 80%, disk > 90%. Set up SNS topic for alert emails. |
+| **M3 chat hardening** | M3 | Chat now emits redacted JSON logs and uses per-user/per-firm in-memory request limits. Configure `CHAT_USER_RATE_LIMIT_PER_MINUTE` and `CHAT_FIRM_RATE_LIMIT_PER_MINUTE`; see `docs/m3-operational-runbook.md`. Replace with distributed limits before horizontal scaling. |
 | **Seed password rotation** | Before real use | Generate new passwords with `openssl rand -base64 16`. Update `prisma/seed.ts`. Re-seed database. Update this document. |
 | **Horizontal scaling** | Phase 2 | Move containers to ECS/Fargate or EKS. Add ALB for load balancing. No application code changes required — only orchestration. |
 

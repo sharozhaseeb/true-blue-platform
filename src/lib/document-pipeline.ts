@@ -1,73 +1,327 @@
 import { prisma } from "@/lib/prisma";
-import { extractTextByPage } from "@/lib/pdf-processor";
+import { extractStructuredPages } from "@/lib/pdf-processor";
+import type { PageText } from "@/lib/pdf-processor";
+import type { StructuredPage } from "@/lib/document-structure";
 import {
   cleanPageText,
-  detectFormType,
   removeRepeatedHeaders,
 } from "@/lib/text-cleaner";
 import { chunkDocument } from "@/lib/chunker";
 
-const MIN_TEXT_THRESHOLD = 100; // Minimum total characters across all pages
+const MIN_TEXT_THRESHOLD = 100;
+const MIN_MEANINGFUL_PAGE_CHARS = 80;
+const SPARSE_PAGE_CHARS = 40;
+const MIN_AVERAGE_CHARS_PER_NON_EMPTY_PAGE = 250;
+
+export interface ExtractionCompletenessAssessment {
+  ok: boolean;
+  reason: string | null;
+  metrics: {
+    totalText: number;
+    nonEmptyPages: number;
+    meaningfulPages: number;
+    sparsePages: number;
+    densePages: number;
+    averageCharsPerNonEmptyPage: number;
+    medianCharsPerNonEmptyPage: number;
+    structuredPages: number;
+    pagesWithBlocks: number;
+    pagesWithLines: number;
+    pagesWithSpans: number;
+    averageBlocksPerNonEmptyPage: number;
+    averageLinesPerNonEmptyPage: number;
+    averageSpansPerNonEmptyPage: number;
+  };
+}
+
+export interface PreparedDocumentProcessing {
+  cleanedPages: ChunkSourcePage[];
+  processedPages: ChunkSourcePage[] | null;
+  completeness: ExtractionCompletenessAssessment;
+  chunks: ReturnType<typeof chunkDocument>;
+}
+
+export type DocumentPageExtractionResult = {
+  pages: ChunkSourcePage[];
+  pageCount: number;
+};
+
+export type ChunkSourcePage = PageText | StructuredPage;
+
+export type DocumentPageExtractor = (
+  fileBuffer: Buffer,
+  documentId: string
+) => Promise<DocumentPageExtractionResult>;
+
+function hasStructuredLayout(page: ChunkSourcePage): page is StructuredPage {
+  return (
+    Array.isArray((page as StructuredPage).blocks) ||
+    Array.isArray((page as StructuredPage).lines) ||
+    Array.isArray((page as StructuredPage).spans)
+  );
+}
+
+async function extractNormalizedStructuredPages(
+  fileBuffer: Buffer,
+  documentId: string
+): Promise<DocumentPageExtractionResult> {
+  const { pages, pageCount } = await extractStructuredPages(
+    fileBuffer,
+    documentId
+  );
+
+  return {
+    pages: pages.map((page) => ({
+      ...page,
+      text: cleanPageText(page.text),
+    })),
+    pageCount,
+  };
+}
+
+function cleanChunkSourcePage<T extends ChunkSourcePage>(page: T): T {
+  return {
+    ...page,
+    text: cleanPageText(page.text),
+  } as T;
+}
+
+function median(values: number[]): number {
+  if (values.length === 0) return 0;
+
+  const sorted = [...values].sort((left, right) => left - right);
+  const middle = Math.floor(sorted.length / 2);
+
+  if (sorted.length % 2 === 0) {
+    return (sorted[middle - 1] + sorted[middle]) / 2;
+  }
+
+  return sorted[middle];
+}
+
+export function assessExtractionCompleteness(
+  pages: ChunkSourcePage[],
+  pageCount: number
+): ExtractionCompletenessAssessment {
+  const pageLengths = pages.map((page) => page.text.trim().length);
+  const nonEmptyPageLengths = pageLengths.filter((length) => length > 0);
+  const totalText = pageLengths.reduce((sum, length) => sum + length, 0);
+  const nonEmptyPages = nonEmptyPageLengths.length;
+  const meaningfulPages = pageLengths.filter(
+    (length) => length >= MIN_MEANINGFUL_PAGE_CHARS
+  ).length;
+  const sparsePages = pageLengths.filter(
+    (length) => length > 0 && length < SPARSE_PAGE_CHARS
+  ).length;
+  const densePages = pageLengths.filter((length) => length >= 250).length;
+  const averageCharsPerNonEmptyPage = nonEmptyPages
+    ? totalText / nonEmptyPages
+    : 0;
+  const medianCharsPerNonEmptyPage = median(nonEmptyPageLengths);
+  const structuredPages = pages.filter(hasStructuredLayout);
+  const pagesWithBlocks = structuredPages.filter(
+    (page) => page.blocks.length > 0
+  ).length;
+  const pagesWithLines = structuredPages.filter(
+    (page) => page.lines.length > 0
+  ).length;
+  const pagesWithSpans = structuredPages.filter(
+    (page) => page.spans.length > 0
+  ).length;
+  const totalBlocks = structuredPages.reduce(
+    (sum, page) => sum + page.blocks.length,
+    0
+  );
+  const totalLines = structuredPages.reduce(
+    (sum, page) => sum + page.lines.length,
+    0
+  );
+  const totalSpans = structuredPages.reduce(
+    (sum, page) => sum + page.spans.length,
+    0
+  );
+  const averageBlocksPerNonEmptyPage = nonEmptyPages
+    ? totalBlocks / nonEmptyPages
+    : 0;
+  const averageLinesPerNonEmptyPage = nonEmptyPages
+    ? totalLines / nonEmptyPages
+    : 0;
+  const averageSpansPerNonEmptyPage = nonEmptyPages
+    ? totalSpans / nonEmptyPages
+    : 0;
+  const minimumTotalText = Math.max(MIN_TEXT_THRESHOLD, pageCount * 75);
+  const minimumMeaningfulPages =
+    pageCount >= 4 ? Math.ceil(pageCount * 0.76) : 1;
+  const minimumNonEmptyPages = pageCount >= 6 ? Math.ceil(pageCount * 0.76) : 1;
+
+  const metrics = {
+    totalText,
+    nonEmptyPages,
+    meaningfulPages,
+    sparsePages,
+    densePages,
+    averageCharsPerNonEmptyPage,
+    medianCharsPerNonEmptyPage,
+    structuredPages: structuredPages.length,
+    pagesWithBlocks,
+    pagesWithLines,
+    pagesWithSpans,
+    averageBlocksPerNonEmptyPage,
+    averageLinesPerNonEmptyPage,
+    averageSpansPerNonEmptyPage,
+  };
+
+  if (totalText < minimumTotalText) {
+    return {
+      ok: false,
+      reason:
+        "Text extraction was too sparse to trust. The PDF may be scanned or the extractor may have only captured a fragment of the document.",
+      metrics,
+    };
+  }
+
+  if (meaningfulPages < minimumMeaningfulPages) {
+    return {
+      ok: false,
+      reason:
+        "Too few pages contained meaningful extracted text. This document appears only partially extracted.",
+      metrics,
+    };
+  }
+
+  if (nonEmptyPages < minimumNonEmptyPages) {
+    return {
+      ok: false,
+      reason:
+        "Most pages extracted as empty or near-empty text. This document cannot be marked complete.",
+      metrics,
+    };
+  }
+
+  if (
+    pageCount >= 10 &&
+    averageCharsPerNonEmptyPage < MIN_AVERAGE_CHARS_PER_NON_EMPTY_PAGE
+  ) {
+    return {
+      ok: false,
+      reason:
+        "The extraction contains too many short pages relative to the document size, which suggests the PDF was only partially captured.",
+      metrics,
+    };
+  }
+
+  if (structuredPages.length > 0) {
+    const minimumStructuredBlockDensity = pageCount >= 4 ? 1.5 : 1;
+    const minimumStructuredLineDensity = pageCount >= 4 ? 12 : 6;
+    const minimumStructuredCoverage = pageCount >= 4 ? 0.7 : 0.5;
+    const structuredCoverage = nonEmptyPages
+      ? structuredPages.length / nonEmptyPages
+      : 0;
+
+    if (
+      structuredCoverage < minimumStructuredCoverage ||
+      averageBlocksPerNonEmptyPage < minimumStructuredBlockDensity ||
+      averageLinesPerNonEmptyPage < minimumStructuredLineDensity
+    ) {
+      return {
+        ok: false,
+        reason:
+          "The extraction does not contain enough structured page density to trust. This document appears only partially captured or flattened.",
+        metrics,
+      };
+    }
+  }
+
+  if (densePages >= 2 && sparsePages >= Math.ceil(pageCount * 0.35)) {
+    return {
+      ok: false,
+      reason:
+        "The extraction contains an implausible mix of dense pages and many near-empty pages, which suggests severe partial capture.",
+      metrics,
+    };
+  }
+
+  return {
+    ok: true,
+    reason: null,
+    metrics,
+  };
+}
+
+/**
+ * Prepare the document for persistence without writing to the database.
+ */
+export function prepareDocumentProcessing(
+  pages: ChunkSourcePage[],
+  pageCount: number,
+  filename: string
+): PreparedDocumentProcessing {
+  const cleanedPages = pages.map(cleanChunkSourcePage);
+
+  const completeness = assessExtractionCompleteness(cleanedPages, pageCount);
+  if (!completeness.ok) {
+    return {
+      cleanedPages,
+      processedPages: null,
+      completeness,
+      chunks: [],
+    };
+  }
+
+  const processedPages = removeRepeatedHeaders(cleanedPages as PageText[]) as ChunkSourcePage[];
+  const chunks = chunkDocument(processedPages, filename);
+
+  return {
+    cleanedPages,
+    processedPages,
+    completeness,
+    chunks,
+  };
+}
 
 /**
  * Process a PDF document: extract text, clean, chunk, and store.
  *
- * Orchestrates the full pipeline:
- * 1. Extract text page-by-page (worker process with 30s timeout)
- * 2. Minimum text threshold check
- * 3. Clean each page's text
- * 4. Detect form types
- * 5. Remove repeated headers
- * 6. Chunk the document
- * 7. Store all chunks in a single prisma.$transaction()
- * 8. Update document status to COMPLETED
- *
- * On failure, document is marked FAILED with a generic error message.
+ * On failure, the document is marked FAILED before the error is rethrown.
  */
 export async function processDocument(
   documentId: string,
   fileBuffer: Buffer,
-  filename: string
+  filename: string,
+  extractPages: DocumentPageExtractor = extractNormalizedStructuredPages
 ): Promise<{ pageCount: number; chunkCount: number }> {
   try {
-    // Step 1: Extract text page-by-page
-    const { pages, pageCount } = await extractTextByPage(
-      fileBuffer,
-      documentId
-    );
+    const { pages, pageCount } = await extractPages(fileBuffer, documentId);
 
-    // Step 2: Clean each page's text
-    const cleanedPages = pages.map((page) => ({
-      ...page,
-      text: cleanPageText(page.text),
-    }));
+    const preparation = prepareDocumentProcessing(pages, pageCount, filename);
+    const { completeness, processedPages, chunks } = preparation;
 
-    // Step 3: Minimum text threshold check
-    const totalText = cleanedPages.reduce(
-      (sum, page) => sum + page.text.length,
-      0
-    );
-    if (totalText < MIN_TEXT_THRESHOLD) {
+    if (!completeness.ok) {
+      await prisma.document.update({
+        where: { id: documentId },
+        data: {
+          status: "FAILED",
+          errorMessage: completeness.reason,
+        },
+      });
+      throw new Error(
+        completeness.reason ?? "Insufficient extractable text"
+      );
+    }
+
+    if (!processedPages || chunks.length === 0) {
       await prisma.document.update({
         where: { id: documentId },
         data: {
           status: "FAILED",
           errorMessage:
-            "No extractable text found. This may be a scanned or image-only PDF — please use a text-based PDF for Milestone 2, or wait for OCR support in Milestone 5.",
+            "No extractable text chunks were produced. This document cannot be marked complete.",
         },
       });
-      throw new Error("Insufficient extractable text");
+      throw new Error("No extractable text chunks produced");
     }
 
-    // Step 4: Remove repeated headers
-    const processedPages = removeRepeatedHeaders(cleanedPages);
-
-    // Step 5: Chunk the document
-    const chunks = chunkDocument(processedPages, filename);
-
-    // Step 6: Store all chunks in a single transaction + update document
     await prisma.$transaction(async (tx) => {
-      // Insert all chunks
       await tx.documentChunk.createMany({
         data: chunks.map((chunk) => ({
           documentId,
@@ -79,7 +333,6 @@ export async function processDocument(
         })),
       });
 
-      // Update document status to COMPLETED
       await tx.document.update({
         where: { id: documentId },
         data: {
@@ -90,8 +343,7 @@ export async function processDocument(
     });
 
     return { pageCount, chunkCount: chunks.length };
-  } catch (err: any) {
-    // If the document isn't already marked FAILED, mark it now
+  } catch (err: unknown) {
     try {
       const doc = await prisma.document.findUnique({
         where: { id: documentId },
@@ -107,9 +359,13 @@ export async function processDocument(
         });
       }
     } catch {
-      // Best-effort status update — don't mask the original error
+      // Best-effort status update.
     }
 
-    throw err;
+    if (err instanceof Error) {
+      throw err;
+    }
+
+    throw new Error(String(err));
   }
 }

@@ -21,15 +21,67 @@ enum DocumentStatus {
   FAILED
 }
 
+enum DocumentBaseArtifactStatus {
+  QUEUED
+  STARTING_PROVIDER_JOB
+  AWAITING_PROVIDER_RESULT
+  PROVIDER_RESULT_READY
+  NORMALIZING
+  READY_FOR_INDEXING
+  INDEXED
+  NEEDS_REVIEW
+  FAILED
+  CANCELLED
+}
+
+enum DocumentArtifactSourceMode {
+  BASE_DOCUMENT_JSON
+  TEXTRACT_RESPONSE_FIXTURE
+  LIVE_TEXTRACT
+}
+
+enum DocumentRetrievalContentType {
+  PROSE
+  FIELD_GROUP
+  TABLE
+  MIXED
+}
+
+enum DocumentVectorIndexStatus {
+  BUILDING
+  ACTIVE
+  RETIRED
+  FAILED
+  DISABLED
+}
+
+enum ChatThreadStatus {
+  ACTIVE
+  ARCHIVED
+  DELETED
+}
+
+enum ChatMessageRole {
+  USER
+  ASSISTANT
+  SYSTEM
+  TOOL
+}
+
 model Firm {
-  id        String     @id @default(cuid())
-  name      String
-  slug      String     @unique
-  isActive  Boolean    @default(true)
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
-  users     User[]
-  documents Document[]
+  id              String                   @id @default(cuid())
+  name            String
+  slug            String                   @unique
+  isActive        Boolean                  @default(true)
+  createdAt       DateTime                 @default(now())
+  updatedAt       DateTime                 @updatedAt
+  users           User[]
+  documents       Document[]
+  baseArtifacts   DocumentBaseArtifact[]
+  retrievalChunks DocumentRetrievalChunk[]
+  vectorIndexes   DocumentVectorIndex[]
+  chatThreads     ChatThread[]
+  chatMessages    ChatMessage[]
 
   @@map("firms")
 }
@@ -48,6 +100,7 @@ model User {
   updatedAt     DateTime       @updatedAt
   refreshTokens RefreshToken[]
   documents     Document[]
+  chatThreads   ChatThread[]
 
   @@index([firmId])
   @@map("users")
@@ -68,24 +121,28 @@ model RefreshToken {
 }
 
 model Document {
-  id           String         @id @default(cuid())
-  filename     String
-  originalName String
-  s3Key        String
-  s3Bucket     String
-  mimeType     String
-  fileSize     Int
-  pageCount    Int?
-  status       DocumentStatus @default(UPLOADING)
-  errorMessage String?
-  firmId       String
-  firm         Firm           @relation(fields: [firmId], references: [id])
-  uploadedById String
-  uploadedBy   User           @relation(fields: [uploadedById], references: [id])
-  createdAt    DateTime       @default(now())
-  updatedAt    DateTime       @updatedAt
-  chunks       DocumentChunk[]
+  id              String                   @id @default(cuid())
+  filename        String
+  originalName    String
+  s3Key           String
+  s3Bucket        String
+  mimeType        String
+  fileSize        Int
+  pageCount       Int?
+  status          DocumentStatus           @default(UPLOADING)
+  errorMessage    String?
+  firmId          String
+  firm            Firm                     @relation(fields: [firmId], references: [id])
+  uploadedById    String
+  uploadedBy      User                     @relation(fields: [uploadedById], references: [id])
+  createdAt       DateTime                 @default(now())
+  updatedAt       DateTime                 @updatedAt
+  chunks          DocumentChunk[]
+  baseArtifacts   DocumentBaseArtifact[]
+  retrievalChunks DocumentRetrievalChunk[]
+  vectorIndexes   DocumentVectorIndex[]
 
+  @@unique([id, firmId])
   @@index([firmId])
   @@index([uploadedById])
   @@index([status])
@@ -103,7 +160,152 @@ model DocumentChunk {
   metadata      Json?
   createdAt     DateTime @default(now())
 
-  @@index([documentId])
   @@unique([documentId, chunkIndex])
+  @@index([documentId])
   @@map("document_chunks")
+}
+
+model DocumentBaseArtifact {
+  id                      String                     @id @default(cuid())
+  documentId              String
+  document                Document                   @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  firmId                  String
+  firm                    Firm                       @relation(fields: [firmId], references: [id])
+  provider                String
+  sourceMode              DocumentArtifactSourceMode
+  providerJobId           String?
+  featureSet              String
+  parserVersion           String
+  generation              Int
+  isCurrent               Boolean                    @default(false)
+  status                  DocumentBaseArtifactStatus
+  rawArtifactS3Key        String?
+  normalizedArtifactS3Key String?
+  summary                 Json?
+  retryCount              Int                        @default(0)
+  lastErrorCode           String?
+  lastErrorMessage        String?
+  startedAt               DateTime?
+  completedAt             DateTime?
+  createdAt               DateTime                   @default(now())
+  updatedAt               DateTime                   @updatedAt
+  retrievalChunks         DocumentRetrievalChunk[]
+
+  @@unique([documentId, parserVersion, featureSet, generation])
+  @@unique([id, documentId, firmId])
+  @@index([documentId])
+  @@index([firmId])
+  @@index([providerJobId])
+  @@index([status])
+  @@index([documentId, parserVersion, featureSet, isCurrent])
+  @@map("document_base_artifacts")
+}
+
+model DocumentRetrievalChunk {
+  id               String                       @id
+  documentId       String
+  document         Document                     @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  firmId           String
+  firm             Firm                         @relation(fields: [firmId], references: [id])
+  baseArtifactId   String
+  baseArtifact     DocumentBaseArtifact         @relation(fields: [baseArtifactId], references: [id], onDelete: Cascade)
+  vectorGeneration Int
+  content          String                       @db.Text
+  contentType      DocumentRetrievalContentType
+  pageStart        Int
+  pageEnd          Int
+  formType         String?
+  sectionPath      String?
+  tableId          String?
+  sourceBlockIds   Json
+  parserVersion    String
+  chunkStrategy    String
+  createdAt        DateTime                     @default(now())
+
+  @@index([documentId])
+  @@index([firmId])
+  @@index([baseArtifactId])
+  @@index([documentId, vectorGeneration])
+  @@index([firmId, formType, pageStart, pageEnd])
+  @@index([parserVersion, chunkStrategy])
+  @@map("document_retrieval_chunks")
+}
+
+model DocumentVectorIndex {
+  id             String                    @id @default(cuid())
+  documentId     String
+  document       Document                  @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  firmId         String
+  firm           Firm                      @relation(fields: [firmId], references: [id])
+  indexName      String
+  namespace      String
+  embeddingModel String
+  embeddingDim   Int
+  parserVersion  String
+  chunkStrategy  String
+  generation     Int
+  isActive       Boolean                   @default(false)
+  status         DocumentVectorIndexStatus
+  vectorIds      Json
+  chunkIds       Json
+  createdAt      DateTime                  @default(now())
+  updatedAt      DateTime                  @updatedAt
+
+  @@unique([documentId, indexName, namespace, generation])
+  @@index([documentId])
+  @@index([firmId, namespace])
+  @@index([status])
+  @@index([documentId, isActive])
+  @@map("document_vector_indexes")
+}
+
+model ChatThread {
+  id             String           @id @default(cuid())
+  firmId         String
+  firm           Firm             @relation(fields: [firmId], references: [id])
+  userId         String
+  user           User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  requestKey     String?
+  title          String
+  status         ChatThreadStatus @default(ACTIVE)
+  documentFilter Json?
+  outputTemplate Json?
+  nextMessageSequence Int             @default(0)
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  messages       ChatMessage[]
+
+  @@unique([id, firmId])
+  @@unique([firmId, userId, requestKey])
+  @@index([firmId, updatedAt])
+  @@index([userId, updatedAt])
+  @@index([status])
+  @@map("chat_threads")
+}
+
+model ChatMessage {
+  id                String          @id @default(cuid())
+  threadId          String
+  firmId            String
+  thread            ChatThread      @relation(fields: [threadId, firmId], references: [id, firmId], onDelete: Cascade)
+  firm              Firm            @relation(fields: [firmId], references: [id])
+  role              ChatMessageRole
+  sequence          Int
+  requestKey        String?
+  content           String          @db.Text
+  uiMessage         Json
+  retrievedChunkIds Json?
+  citations         Json?
+  evidenceCoverage  Json?
+  model             String?
+  inputTokens       Int?
+  outputTokens      Int?
+  createdAt         DateTime        @default(now())
+
+  @@unique([threadId, sequence])
+  @@unique([threadId, role, requestKey])
+  @@index([firmId, createdAt])
+  @@index([threadId, createdAt])
+  @@index([role])
+  @@map("chat_messages")
 }

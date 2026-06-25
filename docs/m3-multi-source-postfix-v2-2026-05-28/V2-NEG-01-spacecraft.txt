@@ -1,0 +1,14 @@
+data: {"type":"data-thread","data":{"threadId":"cmppfod5p005vh3cwzc4gi65q","responseMode":"rag_qa"}}
+
+data: {"type":"data-citations","data":{"citations":[{"marker":"[S1]","chunkId":"cmpduj2f40001qy7njga78ojl:cmpnngfdc0003rzbigyhovwsi:cmpnngflc0005rzbikjqus6mi:textract-base-v1:base-document-structure-v1:g1:16","documentId":"cmpnngfdc0003rzbigyhovwsi","pageStart":2,"pageEnd":2,"snippet":"R1C1: Preparer's signature\nR1C2: Date\nR1C3: PTIN\nR1C4: Check if:\nR2C1: TAJI WHITE\nR2C2: 04-02-2026\nR2C3: P01585757\nR2C4: NOT_SELECTED Self-employed","sourceBlockIds":["d00dc6bc-ef84-4079-a93e-326ae40fcaef","33681987-075d-4e44-84cf-5a814d10ac7d","15228593-c322-495d-8dc6-4370fafb6894","adcef982-31cf-4904-9452-750780e5c97f","44479160-5875-4bcf-92b4-8d16f67b1af9","8151cf4e-75d1-4be0-8835-38dfc3eeec77","594ad48a-9d51-4c0a-be14-5d334a5b8889","4930ffc0-3d9f-4c77-9fa0-bcde5404dea9","9b49e161-1942-4197-828b-82372306f1a7","8a9c982a-c39a-460e-bb6f-465e629fe45b","a1d70583-430b-4e85-8e78-b8c5a4a2f56e","bff7416b-1412-43f5-9361-bde3c91d4de9","50d9b899-13c0-44ff-8983-539352336a7d","af518b8d-d26c-41bb-abc1-7edb44613be7","73bc4f88-261f-4a6d-8b4a-acd9470a0513","2dc915d7-002c-491f-a0eb-c0ae581e343b","07f1d7c0-d600-4e7b-b43e-51251b30933f","97a89128-220a-4d57-b058-7d4c8f3a3124","c823ced5-ef12-46fd-b8ca-d9e14ef3448d","15ca6176-8bca-4482-9bcc-c452ab515ade","7faa869f-2f69-435e-824b-e5cedb1bb54b"],"filename":"2025 Tax Return Documents (Whittaker Jordan).pdf"}]}}
+
+data: {"type":"text-start","id":"text-10842dc5-7b28-4e38-87f2-2fff792536ea"}
+
+data: {"type":"text-delta","id":"text-10842dc5-7b28-4e38-87f2-2fff792536ea","delta":"The document \"2025 Tax Return Documents (Whittaker Jordan).pdf\" does not mention a spacecraft purchase. There is insufficient information related to that topic in the retrieved context [S1]."}
+
+data: {"type":"text-end","id":"text-10842dc5-7b28-4e38-87f2-2fff792536ea"}
+
+data: {"type":"data-usage","data":{"model":"gpt-4o-mini"}}
+
+data: [DONE]
+

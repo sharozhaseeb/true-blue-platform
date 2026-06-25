@@ -1,0 +1,14 @@
+data: {"type":"data-thread","data":{"threadId":"cmpoz84040041nr08ob7vxwsw","responseMode":"rag_qa"}}
+
+data: {"type":"data-citations","data":{"citations":[]}}
+
+data: {"type":"text-start","id":"text-cd6e0fe1-ef2f-4920-9463-e4b085913eaf"}
+
+data: {"type":"text-delta","id":"text-cd6e0fe1-ef2f-4920-9463-e4b085913eaf","delta":"I could not find enough support in the uploaded documents to answer that question."}
+
+data: {"type":"text-end","id":"text-cd6e0fe1-ef2f-4920-9463-e4b085913eaf"}
+
+data: {"type":"data-usage","data":{"model":"gpt-4o-mini"}}
+
+data: [DONE]
+

@@ -1,0 +1,16 @@
+data: {"type":"data-thread","data":{"threadId":"cmppk59sc007wpentndldo3t9","responseMode":"rag_qa"}}
+
+data: {"type":"data-citations","data":{"citations":[]}}
+
+data: {"type":"data-coverage","data":{"coverage":{"version":1,"selectedDocumentIds":["cmpnngfdc0003rzbigyhovwsi"],"retrievedByDocumentId":{"cmpnngfdc0003rzbigyhovwsi":30},"finalByDocumentId":{"cmpnngfdc0003rzbigyhovwsi":0},"noEvidenceDocumentIds":["cmpnngfdc0003rzbigyhovwsi"]}}}
+
+data: {"type":"text-start","id":"text-692d893c-598e-4810-859d-9a8fdf04ac00"}
+
+data: {"type":"text-delta","id":"text-692d893c-598e-4810-859d-9a8fdf04ac00","delta":"I could not find enough support in the uploaded documents to answer that question."}
+
+data: {"type":"text-end","id":"text-692d893c-598e-4810-859d-9a8fdf04ac00"}
+
+data: {"type":"data-usage","data":{"model":"gpt-4o-mini"}}
+
+data: [DONE]
+

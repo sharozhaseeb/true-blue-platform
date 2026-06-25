@@ -1,0 +1,79 @@
+{
+  "DocumentMetadata": { "Pages": 2 },
+  "Blocks": [
+    {
+      "BlockType": "PAGE",
+      "Id": "mp-page-1",
+      "Page": 1,
+      "Geometry": { "BoundingBox": { "Left": 0, "Top": 0, "Width": 1, "Height": 1 } },
+      "Relationships": [{ "Type": "CHILD", "Ids": ["mp-line-1", "mp-key-1", "mp-value-1", "mp-layout-1"] }]
+    },
+    {
+      "BlockType": "LINE",
+      "Id": "mp-line-1",
+      "Page": 1,
+      "Text": "Form 1040 Page One",
+      "Confidence": 99,
+      "Geometry": { "BoundingBox": { "Left": 0.1, "Top": 0.05, "Width": 0.4, "Height": 0.03 } },
+      "Relationships": [{ "Type": "CHILD", "Ids": ["mp-word-form", "mp-word-page-one"] }]
+    },
+    {
+      "BlockType": "WORD",
+      "Id": "mp-word-form",
+      "Page": 1,
+      "Text": "Form",
+      "Confidence": 99,
+      "Geometry": { "BoundingBox": { "Left": 0.1, "Top": 0.05, "Width": 0.05, "Height": 0.03 } }
+    },
+    {
+      "BlockType": "WORD",
+      "Id": "mp-word-page-one",
+      "Page": 1,
+      "Text": "1040 Page One",
+      "Confidence": 99,
+      "Geometry": { "BoundingBox": { "Left": 0.16, "Top": 0.05, "Width": 0.2, "Height": 0.03 } }
+    },
+    {
+      "BlockType": "KEY_VALUE_SET",
+      "Id": "mp-key-1",
+      "Page": 1,
+      "EntityTypes": ["KEY"],
+      "Confidence": 98,
+      "Geometry": { "BoundingBox": { "Left": 0.1, "Top": 0.15, "Width": 0.2, "Height": 0.03 } },
+      "Relationships": [{ "Type": "CHILD", "Ids": ["mp-word-label-1"] }, { "Type": "VALUE", "Ids": ["mp-value-1"] }]
+    },
+    {
+      "BlockType": "KEY_VALUE_SET",
+      "Id": "mp-value-1",
+      "Page": 1,
+      "EntityTypes": ["VALUE"],
+      "Confidence": 98,
+      "Geometry": { "BoundingBox": { "Left": 0.35, "Top": 0.15, "Width": 0.2, "Height": 0.03 } },
+      "Relationships": [{ "Type": "CHILD", "Ids": ["mp-word-value-1"] }]
+    },
+    {
+      "BlockType": "WORD",
+      "Id": "mp-word-label-1",
+      "Page": 1,
+      "Text": "Taxpayer",
+      "Confidence": 98,
+      "Geometry": { "BoundingBox": { "Left": 0.1, "Top": 0.15, "Width": 0.2, "Height": 0.03 } }
+    },
+    {
+      "BlockType": "WORD",
+      "Id": "mp-word-value-1",
+      "Page": 1,
+      "Text": "REDACTED_NAME",
+      "Confidence": 98,
+      "Geometry": { "BoundingBox": { "Left": 0.35, "Top": 0.15, "Width": 0.2, "Height": 0.03 } }
+    },
+    {
+      "BlockType": "LAYOUT_TITLE",
+      "Id": "mp-layout-1",
+      "Page": 1,
+      "Confidence": 99,
+      "Geometry": { "BoundingBox": { "Left": 0.1, "Top": 0.04, "Width": 0.4, "Height": 0.05 } },
+      "Relationships": [{ "Type": "CHILD", "Ids": ["mp-line-1"] }]
+    }
+  ]
+}

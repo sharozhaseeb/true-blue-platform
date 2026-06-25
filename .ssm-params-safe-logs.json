@@ -1,0 +1,14 @@
+{
+    "commands":  [
+                     "set -euo pipefail",
+                     "cd /opt/trueblue",
+                     "echo PS",
+                     "docker compose -f docker-compose.prod.yml ps",
+                     "echo APP_HEALTH",
+                     "docker inspect true-blue-platform-app-1 --format \"{{.Config.Image}} {{.State.Status}} {{.State.Health.Status}}\"",
+                     "echo APP_LOGS",
+                     "docker compose -f docker-compose.prod.yml logs --tail 200 app 2\u003e\u00261 | LC_ALL=C tr -cd \"\\11\\12\\15\\40-\\176\"",
+                     "echo NGINX_LOGS",
+                     "docker compose -f docker-compose.prod.yml logs --tail 80 nginx 2\u003e\u00261 | LC_ALL=C tr -cd \"\\11\\12\\15\\40-\\176\""
+                 ]
+}

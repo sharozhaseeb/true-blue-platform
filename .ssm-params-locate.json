@@ -1,0 +1,8 @@
+{
+    "commands":  [
+                     "set -euo pipefail",
+                     "find /home /opt -name docker-compose.prod.yml -print 2\u003e/dev/null",
+                     "docker inspect true-blue-platform-app-1 --format \"{{ index .Config.Labels \\\"com.docker.compose.project.working_dir\\\" }}\"",
+                     "docker inspect true-blue-platform-app-1 --format \"{{ index .Config.Labels \\\"com.docker.compose.project.config_files\\\" }}\""
+                 ]
+}

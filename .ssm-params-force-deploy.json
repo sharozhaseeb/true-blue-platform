@@ -1,0 +1,27 @@
+{
+    "commands":  [
+                     "set -euo pipefail",
+                     "cd /opt/trueblue",
+                     "echo START_FORCE_DEPLOY",
+                     "aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 536573256060.dkr.ecr.us-east-1.amazonaws.com \u003e/dev/null",
+                     "docker compose -f docker-compose.prod.yml pull app migrate textract-worker \u003e/tmp/trueblue-pull.log 2\u003e\u00261",
+                     "echo PULL_DONE",
+                     "docker compose -f docker-compose.prod.yml --profile setup run --rm migrate \u003e/tmp/trueblue-migrate.log 2\u003e\u00261",
+                     "echo MIGRATE_EXIT_0",
+                     "docker compose -f docker-compose.prod.yml up -d --force-recreate app textract-worker nginx \u003e/tmp/trueblue-up.log 2\u003e\u00261",
+                     "echo UP_DONE",
+                     "for i in $(seq 1 30); do status=$(docker inspect true-blue-platform-app-1 --format \"{{.State.Health.Status}}\" 2\u003e/dev/null || echo starting); echo \"app_health=$status\"; [ \"$status\" = healthy ] \u0026\u0026 break; sleep 5; done",
+                     "echo RUNNING_IMAGES",
+                     "docker inspect true-blue-platform-app-1 --format \"APP={{.Config.Image}} HEALTH={{.State.Health.Status}}\"",
+                     "docker inspect true-blue-platform-textract-worker-1 --format \"WORKER={{.Config.Image}} STATUS={{.State.Status}}\"",
+                     "set -a; . ./.env; set +a",
+                     "echo COLUMN_CHECK",
+                     "docker compose -f docker-compose.prod.yml exec -T db psql -U \"$POSTGRES_USER\" -d \"$POSTGRES_DB\" -tAc \"SELECT column_name FROM information_schema.columns WHERE table_name=\u0027chat_messages\u0027 AND column_name=\u0027evidenceCoverage\u0027;\"",
+                     "echo MIGRATION_CHECK",
+                     "docker compose -f docker-compose.prod.yml exec -T db psql -U \"$POSTGRES_USER\" -d \"$POSTGRES_DB\" -tAc \"SELECT migration_name FROM \\\"_prisma_migrations\\\" WHERE migration_name=\u002720260528152000_add_chat_evidence_coverage\u0027;\"",
+                     "echo MIGRATE_LOG_TAIL_ASCII",
+                     "LC_ALL=C tr -cd \"\\11\\12\\15\\40-\\176\" \u003c /tmp/trueblue-migrate.log | tail -40",
+                     "echo PS",
+                     "docker compose -f docker-compose.prod.yml ps"
+                 ]
+}

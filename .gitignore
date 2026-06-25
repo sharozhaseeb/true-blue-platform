@@ -33,7 +33,22 @@ yarn-error.log*
 # env files
 .env*
 !.env.example
-!.env.staging
+!.env.staging.example
+aws_creds.env
+*aws*creds*.env
+*credentials*.env
+
+# generated document-processing artifacts
+cookies.txt
+*-report.json
+textract-spike-*/
+textract-spike-output/
+textract-client-evidence-*/
+textract-normalized-*/
+textract-raw-*/
+base-document-output-*/
+document-artifacts-*/
+*.textract.json
 
 # vercel
 .vercel

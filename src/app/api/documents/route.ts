@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { getRequestContext } from "@/lib/tenant";
-import { internalError } from "@/lib/errors";
+import { internalError, unauthorized } from "@/lib/errors";
 import { prisma } from "@/lib/prisma";
 import { DocumentStatus } from "@prisma/client";
 
@@ -16,6 +16,10 @@ import { DocumentStatus } from "@prisma/client";
 export async function GET(request: NextRequest) {
   try {
     const ctx = await getRequestContext();
+    if (!ctx.isAuthenticated) {
+      return unauthorized();
+    }
+
     const { searchParams } = new URL(request.url);
 
     // Parse pagination

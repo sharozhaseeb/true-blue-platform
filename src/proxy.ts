@@ -12,20 +12,17 @@ const PUBLIC_PATHS = [
 
 const ADMIN_ONLY_PATHS = ["/api/admin"];
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Allow root landing page
   if (pathname === "/") {
     return NextResponse.next();
   }
 
-  // Allow public paths
-  if (PUBLIC_PATHS.some((p) => pathname.startsWith(p))) {
+  if (PUBLIC_PATHS.some((path) => pathname.startsWith(path))) {
     return NextResponse.next();
   }
 
-  // Allow static assets and Next.js internals
   if (pathname.startsWith("/_next") || pathname.startsWith("/favicon")) {
     return NextResponse.next();
   }
@@ -42,18 +39,12 @@ export async function middleware(request: NextRequest) {
   try {
     const payload = await verifyAccessToken(accessToken);
 
-    // RBAC: Admin-only paths
-    // Note: Middleware runs in Edge Runtime where @prisma/client imports may not
-    // be available, so we use direct role checks here instead of hasPermission()
-    // from @/lib/rbac. API routes (which run in Node.js) should use hasPermission()
-    // for fine-grained permission checks. See src/lib/rbac.ts.
-    if (ADMIN_ONLY_PATHS.some((p) => pathname.startsWith(p))) {
+    if (ADMIN_ONLY_PATHS.some((path) => pathname.startsWith(path))) {
       if (payload.role !== "PLATFORM_ADMIN") {
         return NextResponse.json({ error: "Forbidden" }, { status: 403 });
       }
     }
 
-    // Inject user context into request headers for API routes
     const requestHeaders = new Headers(request.headers);
     requestHeaders.set("x-user-id", payload.userId);
     requestHeaders.set("x-user-role", payload.role);

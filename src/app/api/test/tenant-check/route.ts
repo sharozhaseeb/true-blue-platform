@@ -11,7 +11,7 @@ export async function GET() {
   try {
     const ctx = await getRequestContext();
 
-    if (!ctx.userId) {
+    if (!ctx.isAuthenticated) {
       return unauthorized();
     }
 

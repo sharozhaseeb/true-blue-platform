@@ -1,0 +1,7 @@
+{
+    "commands":  [
+                     "cd /opt/trueblue",
+                     "docker compose -f docker-compose.prod.yml logs --tail 80 app | sed -e \"s/[[:cntrl:]]//g\"",
+                     "docker compose -f docker-compose.prod.yml ps"
+                 ]
+}

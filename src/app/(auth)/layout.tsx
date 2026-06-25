@@ -27,10 +27,10 @@ export default function AuthLayout({
           <div className="mb-auto">
             <div className="flex items-center gap-3">
               <div className="h-10 w-10 rounded-lg bg-white/10 backdrop-blur-sm border border-white/10 flex items-center justify-center">
-                <span className="text-sm font-bold text-white">ET</span>
+                <span className="text-sm font-bold text-white">TB</span>
               </div>
               <span className="text-lg font-semibold text-white/90">
-                EulerTel
+                True Blue
               </span>
             </div>
           </div>
@@ -93,10 +93,10 @@ export default function AuthLayout({
           <div className="lg:hidden px-6 pt-6">
             <div className="flex items-center gap-2.5">
               <div className="h-9 w-9 rounded-lg bg-blue-600 flex items-center justify-center">
-                <span className="text-sm font-bold text-white">ET</span>
+                <span className="text-sm font-bold text-white">TB</span>
               </div>
               <span className="text-base font-semibold text-gray-900">
-                EulerTel
+                True Blue
               </span>
             </div>
           </div>

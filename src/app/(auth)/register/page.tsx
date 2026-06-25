@@ -69,7 +69,7 @@ export default function RegisterPage() {
           Create your account
         </h1>
         <p className="mt-2 text-sm text-gray-500">
-          Get started with EulerTel in minutes
+          Get started with True Blue in minutes
         </p>
       </div>
 

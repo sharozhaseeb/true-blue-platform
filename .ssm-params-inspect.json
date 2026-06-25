@@ -1,0 +1,11 @@
+{
+    "commands":  [
+                     "set -euo pipefail",
+                     "echo HOST=$(hostname)",
+                     "echo USER=$(whoami)",
+                     "find /home/ec2-user -maxdepth 3 -name docker-compose.prod.yml -print",
+                     "df -h /",
+                     "docker ps --format \"table {{.Names}}\\t{{.Image}}\\t{{.Status}}\"",
+                     "for d in /home/ec2-user/true-blue-platform /home/ec2-user/app /opt/true-blue-platform; do if [ -f \"$d/docker-compose.prod.yml\" ]; then echo COMPOSE_DIR=$d; cd \"$d\"; grep -E \"^(APP_IMAGE|MIGRATE_IMAGE|WORKER_IMAGE|NEXT_PUBLIC_APP_URL|ENABLE_AI_CHAT|ENABLE_VECTOR_RETRIEVAL)=\" .env || true; docker compose -f docker-compose.prod.yml ps; fi; done"
+                 ]
+}

@@ -1,4 +1,4 @@
-# EulerTel — Financial Intelligence Platform
+# True Blue Financial Intelligence Platform
 
 Secure, multi-tenant document-based AI platform for tax professionals.
 
@@ -6,7 +6,7 @@ Secure, multi-tenant document-based AI platform for tax professionals.
 
 ## Staging URL
 
-**http://54.208.102.72** (HTTP only — no SSL yet)
+Use the canonical M4 endpoint supplied in the delivery message. If the endpoint is HTTP-only, use non-sensitive sample PDFs only.
 
 ## Tech Stack
 

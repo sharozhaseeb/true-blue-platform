@@ -1,0 +1,1 @@
+{"level":"warn","event":"chat.local_retrieval_without_query_overlap","time":"2026-06-23T23:25:55.775Z","firmId":"cmmmlw5100001nmq5ktw89kyl","userId":"cmmmlw57g0003nmq53zbmwb0r","threadId":"cmqr9pjdf000gutco3yr4uri6","retrievedCount":1,"mode":"local_retrieval_fallback"}

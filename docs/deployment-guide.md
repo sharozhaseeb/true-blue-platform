@@ -479,15 +479,26 @@ docker compose -f docker-compose.prod.yml ps
 ssh -i ~/.ssh/trueblue-staging.pem ec2-user@54.208.102.72
 cd true-blue-platform
 
-# Pull latest code
-git pull
+# Update image refs in .env
+# APP_IMAGE=docker.io/<dockerhub-user>/true-blue-platform-app:<release-tag>
+# MIGRATE_IMAGE=docker.io/<dockerhub-user>/true-blue-platform-migrate:<release-tag>
+vi .env
 
-# Rebuild and restart
-docker compose -f docker-compose.prod.yml build --no-cache
-docker compose -f docker-compose.prod.yml up -d
+# Verify the resolved images before pulling
+grep -E '^(APP_IMAGE|MIGRATE_IMAGE)=' .env
+docker compose -f docker-compose.prod.yml config | grep 'image:'
 
-# If there are new database migrations
+# Pull the new app and migration images
+docker compose -f docker-compose.prod.yml pull app migrate
+
+# If there are new database migrations, take a backup first
+docker compose -f docker-compose.prod.yml exec db pg_dump -U trueblue trueblue | gzip > ~/backup-$(date +%Y%m%d-%H%M%S).sql.gz
+
+# Run migrations + seed from the migration image
 docker compose -f docker-compose.prod.yml --profile setup run --rm migrate
+
+# Start or refresh the runtime services
+docker compose -f docker-compose.prod.yml up -d app nginx
 
 # Verify
 docker compose -f docker-compose.prod.yml ps
@@ -499,14 +510,18 @@ curl -s -o /dev/null -w "%{http_code}" http://54.208.102.72/
 ```bash
 ssh -i ~/.ssh/trueblue-staging.pem ec2-user@54.208.102.72
 cd true-blue-platform
-git pull && docker compose -f docker-compose.prod.yml build --no-cache && docker compose -f docker-compose.prod.yml up -d
+vi .env
+grep -E '^(APP_IMAGE|MIGRATE_IMAGE)=' .env
+docker compose -f docker-compose.prod.yml config | grep 'image:'
+docker compose -f docker-compose.prod.yml pull app
+docker compose -f docker-compose.prod.yml up -d app nginx
 ```
 
 ### Seed the database
 
 ```bash
-# Enter the app container and run seed
-docker compose -f docker-compose.prod.yml exec app npx prisma db seed
+# Use the migration image so Prisma CLI and seed tooling are present
+docker compose -f docker-compose.prod.yml --profile setup run --rm migrate sh -c "npx prisma db seed"
 ```
 
 ### Access the database directly

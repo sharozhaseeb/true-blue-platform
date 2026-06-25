@@ -49,6 +49,20 @@ curl -b cookies.txt http://54.208.102.72/api/documents
 
 When you upload a PDF, the response includes an `id` field (e.g., `"id": "cm5abc123..."`). Many of the tests below ask you to use this ID. Copy it from the upload response and paste it into the URL where you see `DOCUMENT_ID`.
 
+**Save the ID once and reuse it (recommended for the chunk-detail tests).** If you are running the curl tests from bash (Git Bash / WSL / Linux / macOS), assign the ID to a shell variable immediately after the upload and reference it in every later call. This avoids re-pasting the ID, and — more importantly — it makes it easy to always quote the full URL, which you must do whenever it contains `?` or `&`:
+
+```bash
+# Replace with the id field from your own upload response
+DOC_ID="cm5abc123..."
+
+# Always wrap the URL in double quotes when it contains ? or &
+curl -b cookies.txt "http://54.208.102.72/api/documents/$DOC_ID?chunks=true&limit=3"
+```
+
+If you forget the quotes, bash will interpret `&` as a job-control operator and silently drop everything after it, and some shells will rewrite `${VAR?…}` as a parameter-expansion. Either mistake produces a URL with no document ID in the path and the server will correctly return 404. Quoting the whole URL prevents both.
+
+**Windows users who prefer not to deal with shell quoting should use Postman (Option A) instead of curl.** Postman constructs the URL for you, so it is not affected by shell quoting differences between cmd.exe, PowerShell, and Git Bash.
+
 ### Session expiration
 
 Access tokens expire after 15 minutes. If you see an unexpected `{"error":"Token expired"}` response during testing, simply re-run the login command to get fresh cookies:
@@ -113,7 +127,7 @@ curl -b cookies.txt http://54.208.102.72/api/documents/upload \
     "fileSize": 210232,
     "pageCount": 22,
     "status": "COMPLETED",
-    "chunkCount": 19
+    "chunkCount": 21
   }
 }
 ```
@@ -376,7 +390,7 @@ curl -b cookies.txt "http://54.208.102.72/api/documents/DOCUMENT_ID?chunks=true&
       }
     }
   ],
-  "chunkTotal": 19
+  "chunkTotal": 21
 }
 ```
 
@@ -386,13 +400,17 @@ The `content` field contains the actual text extracted from each page of the PDF
 
 The scope lists "text cleaning and normalization" as a deliverable. Before chunking, every page of extracted text goes through the following processing:
 
+This remediation is conservative: it preserves visible selectable footer text instead of stripping it, so contract checks can still see `Page X of Y`, `DO NOT FILE`, and `DRAFT` when they are present in the PDF.
+
 - **Unicode normalization** — curly quotes are straightened (`"` → `"`), em-dashes converted to hyphens, non-breaking spaces converted to regular spaces
 - **Whitespace cleanup** — excessive blank lines and runs of spaces are collapsed so the text is readable without visual noise
 - **Control character removal** — invisible characters (null bytes, form feeds, vertical tabs) that appear in some PDF exports are stripped
-- **Header/footer stripping** — repeated headers that appear identically on every page (e.g., firm name, preparer info, date lines common in tax software output) are removed from all pages except the first
+- **Visible text preservation** — selectable footer-style text is kept when it is visible in the PDF, including `Page X of Y`, `DO NOT FILE`, and `DRAFT`
 - **Tax data preservation** — dollar signs, commas in numbers, percentages, dates, and form line numbers are explicitly preserved through all cleaning steps
 
-You can observe these effects in the `content` field: the text should be clean, readable, and free of repeated boilerplate — but all financial data should remain intact.
+You can observe these effects in the `content` field: the text should be clean, readable, and biased toward preserving content rather than stripping visible text.
+
+The current pass also keeps visible text intact so page-level and chunk-level checks can assert against the same content the user can select in the PDF.
 
 ### Test 3b: Verify financial data is preserved accurately
 
@@ -446,7 +464,7 @@ curl -b cookies.txt http://54.208.102.72/api/documents/upload \
 curl -b cookies.txt "http://54.208.102.72/api/documents/DOCUMENT_ID?chunks=true&limit=5"
 ```
 
-Every chunk in the response should have these fields:
+Every chunk in the response should have these fields. `metadata.formType` is the stable public alias for the chunk's resolved IRS form ownership; `metadata.explicitFormType` is the page-local detection, and `metadata.resolvedFormType` is the canonical value returned to callers. Legacy rows that do not record provenance should keep `metadata.formTypeSource` as `null` rather than inventing `propagated`.
 
 | Field | What it is | Example |
 |---|---|---|
@@ -454,11 +472,14 @@ Every chunk in the response should have these fields:
 | `chunkIndex` | Sequential position across all chunks (starts at 0) | `0`, `1`, `2` |
 | `tokenEstimate` | Approximate number of tokens (for AI processing in M3) | `487` |
 | `metadata.filename` | The sanitized filename (spaces replaced with underscores) | `"2025_Tax_Return_Documents_(Jimenez_Julio).pdf"` |
-| `metadata.formType` | The detected IRS form type, or `null` if not recognized | `"Form 1040"`, `"Schedule C"`, `null` |
+| `metadata.formType` | Stable public form type alias for the chunk's resolved ownership | `"Form 1040"`, `"Schedule C"`, `null` |
+| `metadata.explicitFormType` | Form type detected directly on that page, or `null` when none was detected on that page | `"Form 1040"`, `null` |
+| `metadata.resolvedFormType` | Canonical resolved form ownership for the chunk | `"Form 1040"`, `"Schedule C"`, `null` |
+| `metadata.formTypeSource` | Whether the form type was detected explicitly or propagated; legacy rows with unknown provenance stay `null` | `"explicit"`, `"propagated"`, `null` |
 
 ### Test 4b: Verify chunk count is reasonable
 
-The number of chunks should be close to the number of pages — slightly fewer because empty pages are skipped and very short pages are merged together:
+The number of chunks should be close to the number of pages. Current sample PDFs land a little below page count because some pages are empty or near-empty, and long pages can still split into multiple chunks when they exceed the token cap:
 
 | Document | Pages | Expected Chunks (approx) |
 |---|---|---|
@@ -472,6 +493,8 @@ The number of chunks should be close to the number of pages — slightly fewer b
 You can see the `chunkCount` in the upload response, or check `chunkTotal` in the detail response.
 
 ### Test 4c: Verify IRS form type detection
+
+`metadata.formType` is now the resolved form-ownership label for the chunk, not only the page-local explicit header detection. That means continuation pages can legitimately keep the same `formType` even when the later page does not repeat the full form header, while unrelated/support pages should still return `null`.
 
 The system automatically identifies IRS form types from the extracted text. Check chunks from different pages — you should see detected form types like:
 
@@ -615,6 +638,8 @@ Use this checklist to confirm all four acceptance criteria are met:
 
 **Criterion 3 — Text extraction, cleaning, and normalization:**
 - [ ] Chunks contain readable, clean text extracted from the PDF (test 3a)
+- [ ] Visible page text that is selectable in the PDF is preserved rather than stripped aggressively (test 3a)
+- [ ] Visible repeated headers or footers may still appear when they are part of the selectable page content (test 3a)
 - [ ] Text is normalized — no garbled characters, excessive whitespace, or repeated headers (test 3a)
 - [ ] Dollar amounts, form line numbers, and dates match the source PDF (test 3b)
 - [ ] All 6 sample PDFs upload and process successfully with status COMPLETED (test 3c)

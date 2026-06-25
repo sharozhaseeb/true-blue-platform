@@ -1,0 +1,22 @@
+{
+    "commands":  [
+                     "set -euo pipefail",
+                     "cd /opt/trueblue",
+                     "COMPOSE=\"docker compose -f docker-compose.prod.yml\"",
+                     "set -a; . ./.env; set +a",
+                     "echo IMAGE_REFS",
+                     "grep -E \"^(APP_IMAGE|MIGRATE_IMAGE|WORKER_IMAGE)=\" .env",
+                     "echo PS",
+                     "$COMPOSE ps",
+                     "echo APP_IMAGE_RUNNING",
+                     "docker inspect true-blue-platform-app-1 --format \"{{.Config.Image}} {{.State.Health.Status}}\"",
+                     "echo WORKER_IMAGE_RUNNING",
+                     "docker inspect true-blue-platform-textract-worker-1 --format \"{{.Config.Image}} {{.State.Status}}\"",
+                     "echo COLUMN_CHECK",
+                     "$COMPOSE exec -T db psql -U \"$POSTGRES_USER\" -d \"$POSTGRES_DB\" -tAc \"SELECT column_name FROM information_schema.columns WHERE table_name=\u0027chat_messages\u0027 AND column_name=\u0027evidenceCoverage\u0027;\"",
+                     "echo MIGRATIONS",
+                     "$COMPOSE exec -T db psql -U \"$POSTGRES_USER\" -d \"$POSTGRES_DB\" -tAc \"SELECT migration_name FROM \\\"_prisma_migrations\\\" ORDER BY started_at DESC LIMIT 5;\"",
+                     "echo BACKUPS",
+                     "ls -lh backups/pre-m3-coverage-20260528-170349-ea5aa9a-*.sql.gz | tail -3"
+                 ]
+}

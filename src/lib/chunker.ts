@@ -1,5 +1,8 @@
 import { PageText } from "@/lib/pdf-processor";
-import { detectFormType } from "@/lib/text-cleaner";
+import type { StructuredPage } from "@/lib/document-structure";
+import { resolvePageFormTypes } from "@/lib/form-resolution";
+import type { FormTypeSource } from "@/lib/form-resolution";
+import { normalizeStructuredBlockText } from "@/lib/text-cleaner";
 
 export interface DocumentChunkData {
   content: string;
@@ -8,16 +11,25 @@ export interface DocumentChunkData {
   tokenEstimate: number;
   metadata: {
     filename: string;
-    formType: string | null;
+    formType: string | null; // stable public alias for resolvedFormType
+    explicitFormType: string | null;
+    resolvedFormType: string | null;
+    formTypeSource: FormTypeSource | null;
+    formTypeOriginPage: number | null;
+    sourcePageNumbers: number[];
+    coversPageStart: boolean;
+    coversPageEnd: boolean;
     pageRange?: string;
     isPartialPage?: boolean;
     partIndex?: number;
   };
 }
 
-const MAX_TOKENS_PER_CHUNK = 1200;
-const MIN_PAGE_TOKENS = 50;
-const OVERLAP_TOKENS = 100;
+export const MAX_TOKENS_PER_CHUNK = 1200;
+export const OVERLAP_TOKENS = 100;
+const WHITESPACE_RE = /\s/;
+
+type ChunkSourcePage = PageText | StructuredPage;
 
 /**
  * Estimate the number of tokens in a string.
@@ -41,49 +53,94 @@ export function splitAtParagraphBoundary(
   let currentChunk = "";
 
   for (const paragraph of paragraphs) {
+    const trimmedParagraph = paragraph.trim();
+    if (!trimmedParagraph) {
+      continue;
+    }
+
+    if (estimateTokens(trimmedParagraph) > maxTokens) {
+      if (currentChunk.trim()) {
+        chunks.push(currentChunk.trim());
+        currentChunk = "";
+      }
+
+      chunks.push(...splitChunkIfNeeded(trimmedParagraph, maxTokens, overlap));
+      continue;
+    }
+
     const candidate = currentChunk
-      ? currentChunk + "\n\n" + paragraph
-      : paragraph;
+      ? currentChunk + "\n\n" + trimmedParagraph
+      : trimmedParagraph;
 
     if (estimateTokens(candidate) > maxTokens && currentChunk) {
       chunks.push(currentChunk.trim());
 
-      // Add overlap from the end of the current chunk
-      const overlapText = getOverlapText(currentChunk, overlap);
-      currentChunk = overlapText ? overlapText + "\n\n" + paragraph : paragraph;
+      currentChunk = buildChunkWithOverlap(
+        currentChunk,
+        trimmedParagraph,
+        maxTokens,
+        overlap
+      );
     } else {
       currentChunk = candidate;
     }
   }
 
-  // Don't forget the last chunk
   if (currentChunk.trim()) {
     chunks.push(currentChunk.trim());
   }
 
-  // If we couldn't split by paragraphs (single huge paragraph), force-split by characters
-  if (chunks.length === 1 && estimateTokens(chunks[0]) > maxTokens) {
-    return forceSplitByLength(chunks[0], maxTokens, overlap);
-  }
-
-  return chunks;
+  return chunks.flatMap((chunk) =>
+    splitChunkIfNeeded(chunk, maxTokens, overlap)
+  );
 }
 
-const WHITESPACE_RE = /\s/;
+function splitChunkIfNeeded(
+  text: string,
+  maxTokens: number,
+  overlap: number
+): string[] {
+  const trimmed = text.trim();
+  if (!trimmed) return [];
+  if (estimateTokens(trimmed) <= maxTokens) {
+    return [trimmed];
+  }
 
-/**
- * Walk `position` to a whitespace boundary inside (lowerBound, upperBound).
- *
- * direction "backward" prefers the nearest whitespace at-or-before `position`,
- * which keeps a chunk near its target size. direction "forward" returns the
- * first non-whitespace character after the next whitespace run, which
- * guarantees text[result - 1] is whitespace (so a chunk that starts at the
- * returned index does not begin mid-token).
- *
- * If no whitespace exists in the search direction the function falls back to
- * the opposite direction; if still nothing is found it returns the original
- * `position`. The result is always clamped to (lowerBound, upperBound].
- */
+  return forceSplitByLength(trimmed, maxTokens, overlap).flatMap((chunk) =>
+    splitChunkIfNeeded(chunk, maxTokens, overlap)
+  );
+}
+
+function buildChunkWithOverlap(
+  previousChunk: string,
+  nextChunk: string,
+  maxTokens: number,
+  overlap: number
+): string {
+  const trimmedNext = nextChunk.trim();
+  if (!trimmedNext) {
+    return "";
+  }
+
+  const nextTokens = estimateTokens(trimmedNext);
+  if (nextTokens >= maxTokens) {
+    return trimmedNext;
+  }
+
+  const maxOverlapTokens = Math.min(overlap, Math.max(maxTokens - nextTokens, 0));
+
+  for (let overlapTokens = maxOverlapTokens; overlapTokens > 0; overlapTokens--) {
+    const overlapText = getOverlapText(previousChunk, overlapTokens);
+    const candidate = overlapText ? overlapText + "\n\n" + trimmedNext : trimmedNext;
+
+    if (estimateTokens(candidate) <= maxTokens) {
+      return candidate.trim();
+    }
+  }
+
+  return trimmedNext;
+}
+
 function walkToTokenBoundary(
   text: string,
   position: number,
@@ -115,32 +172,21 @@ function walkToTokenBoundary(
   return i;
 }
 
-/**
- * Get the last N tokens worth of text for overlap, anchored at a whitespace
- * boundary so the overlap never begins mid-token.
- */
 function getOverlapText(text: string, overlapTokens: number): string {
-  const charCount = overlapTokens * 4; // Reverse the token estimation
+  const charCount = overlapTokens * 4;
   if (text.length <= charCount) return text;
   const target = text.length - charCount;
   const anchored = walkToTokenBoundary(text, target, 0, text.length, "forward");
   return anchored >= text.length ? "" : text.substring(anchored);
 }
 
-/**
- * Force-split text by character length when paragraph splitting isn't possible.
- *
- * Both chunk endings and overlap starts are anchored to whitespace boundaries
- * so multi-character tokens (numbers, currency values, form line refs) are
- * never sliced in half.
- */
 function forceSplitByLength(
   text: string,
   maxTokens: number,
   overlap: number
 ): string[] {
   const maxChars = maxTokens * 4;
-  const overlapChars = Math.min(overlap * 4, maxChars - 100); // Overlap can't exceed chunk size
+  const overlapChars = Math.min(overlap * 4, maxChars - 100);
   const chunks: string[] = [];
   let start = 0;
 
@@ -167,119 +213,154 @@ function forceSplitByLength(
       nextStart = end;
     }
 
-    // Guarantee forward progress: never go backwards
     start = Math.max(nextStart, start + 1);
   }
 
   return chunks;
 }
 
-/**
- * Hybrid page-based chunking.
- *
- * Strategy:
- * 1. One chunk per page (default)
- * 2. Pages exceeding ~1200 tokens → split at paragraph boundaries
- * 3. Sub-chunks get same pageNumber, incremented chunkIndex
- * 4. 100-token overlap between sub-chunks
- * 5. Empty pages skipped
- * 6. Pages under 50 tokens merged with the next page
- */
-export function chunkDocument(
-  pages: PageText[],
-  filename: string
-): DocumentChunkData[] {
-  const chunks: DocumentChunkData[] = [];
-  let chunkIndex = 0;
-  let pendingMerge: { text: string; startPage: number } | null = null;
+function hasStructuredBlocks(page: ChunkSourcePage): page is StructuredPage {
+  return Array.isArray((page as StructuredPage).blocks);
+}
 
-  for (let i = 0; i < pages.length; i++) {
-    const page = pages[i];
-    const text = page.text.trim();
+function splitFlatPageUnits(text: string): string[] {
+  return text
+    .split(/\n\n+/)
+    .map((paragraph) => paragraph.trim())
+    .filter(Boolean);
+}
 
-    // Skip empty pages
-    if (!text) continue;
+function collectPageUnits(page: ChunkSourcePage): string[] {
+  if (hasStructuredBlocks(page) && page.blocks.length > 0) {
+    const blockUnits = page.blocks
+      .map((block) => normalizeStructuredBlockText(block))
+      .filter(Boolean);
 
-    let currentText = text;
-    let currentPageNumber = page.pageNumber;
-
-    // Handle pending merge from previous short page
-    if (pendingMerge) {
-      currentText = pendingMerge.text + "\n\n" + currentText;
-      currentPageNumber = pendingMerge.startPage;
-      pendingMerge = null;
+    if (blockUnits.length > 0) {
+      return blockUnits;
     }
+  }
 
-    const tokens = estimateTokens(currentText);
+  return splitFlatPageUnits(page.text);
+}
 
-    // Pages under 50 tokens: merge with next page
-    if (tokens < MIN_PAGE_TOKENS && i < pages.length - 1) {
-      pendingMerge = { text: currentText, startPage: currentPageNumber };
+function chunkPageUnits(
+  units: string[],
+  maxTokens: number,
+  overlap: number
+): string[] {
+  const chunks: string[] = [];
+  let currentChunk = "";
+
+  for (const unit of units) {
+    const trimmedUnit = unit.trim();
+    if (!trimmedUnit) {
       continue;
     }
 
-    const formType = detectFormType(currentText);
-
-    // Pages exceeding max tokens: split at paragraph boundaries
-    if (tokens > MAX_TOKENS_PER_CHUNK) {
-      const subChunks = splitAtParagraphBoundary(
-        currentText,
-        MAX_TOKENS_PER_CHUNK,
-        OVERLAP_TOKENS
-      );
-
-      for (let j = 0; j < subChunks.length; j++) {
-        const subText = subChunks[j];
-        chunks.push({
-          content: subText,
-          pageNumber: currentPageNumber,
-          chunkIndex,
-          tokenEstimate: estimateTokens(subText),
-          metadata: {
-            filename,
-            formType,
-            isPartialPage: true,
-            partIndex: j,
-            ...(currentPageNumber !== page.pageNumber
-              ? { pageRange: `${currentPageNumber}-${page.pageNumber}` }
-              : {}),
-          },
-        });
-        chunkIndex++;
+    if (estimateTokens(trimmedUnit) > maxTokens) {
+      if (currentChunk.trim()) {
+        chunks.push(currentChunk.trim());
+        currentChunk = "";
       }
+
+      chunks.push(trimmedUnit);
+      continue;
+    }
+
+    const candidate = currentChunk
+      ? currentChunk + "\n\n" + trimmedUnit
+      : trimmedUnit;
+
+    if (estimateTokens(candidate) > maxTokens && currentChunk) {
+      chunks.push(currentChunk.trim());
+
+      currentChunk = buildChunkWithOverlap(
+        currentChunk,
+        trimmedUnit,
+        maxTokens,
+        overlap
+      );
     } else {
-      // Normal case: one chunk per page
+      currentChunk = candidate;
+    }
+  }
+
+  if (currentChunk.trim()) {
+    chunks.push(currentChunk.trim());
+  }
+
+  return chunks.flatMap((chunk) =>
+    splitChunkIfNeeded(chunk, maxTokens, overlap)
+  );
+}
+
+/**
+ * Hybrid page-based chunking.
+ *
+ * Pages stay page-local by default. Large pages may split into sub-chunks with
+ * overlap, but short pages are no longer merged across boundaries because that
+ * made chunk starts ambiguous and smeared form labels.
+ */
+export function chunkDocument(
+  pages: ChunkSourcePage[],
+  filename: string
+): DocumentChunkData[] {
+  const chunks: DocumentChunkData[] = [];
+  const pageForms = new Map(
+    resolvePageFormTypes(pages).map((entry) => [entry.pageNumber, entry])
+  );
+  let chunkIndex = 0;
+
+  for (const page of pages) {
+    const text = page.text.trim();
+    if (!text) continue;
+
+    const pageForm = pageForms.get(page.pageNumber) ?? {
+      pageNumber: page.pageNumber,
+      explicitFormType: null,
+      resolvedFormType: null,
+      formTypeSource: null,
+      formTypeOriginPage: null,
+    };
+
+    const pageChunks = chunkPageUnits(
+      collectPageUnits(page),
+      MAX_TOKENS_PER_CHUNK,
+      OVERLAP_TOKENS
+    );
+
+    for (let partIndex = 0; partIndex < pageChunks.length; partIndex++) {
+      const content = pageChunks[partIndex];
+      const isPartialPage = pageChunks.length > 1;
+      const coversPageStart = partIndex === 0;
+      const coversPageEnd = partIndex === pageChunks.length - 1;
+
       chunks.push({
-        content: currentText,
-        pageNumber: currentPageNumber,
+        content,
+        pageNumber: page.pageNumber,
         chunkIndex,
-        tokenEstimate: tokens,
+        tokenEstimate: estimateTokens(content),
         metadata: {
           filename,
-          formType,
-          ...(pendingMerge !== null ||
-          currentPageNumber !== page.pageNumber
-            ? { pageRange: `${currentPageNumber}-${page.pageNumber}` }
+          formType: pageForm.resolvedFormType, // public alias for resolved ownership
+          explicitFormType: pageForm.explicitFormType,
+          resolvedFormType: pageForm.resolvedFormType,
+          formTypeSource: pageForm.formTypeSource,
+          formTypeOriginPage: pageForm.formTypeOriginPage,
+          sourcePageNumbers: [page.pageNumber],
+          coversPageStart,
+          coversPageEnd,
+          ...(isPartialPage
+            ? {
+                isPartialPage: true,
+                partIndex,
+              }
             : {}),
         },
       });
       chunkIndex++;
     }
-  }
-
-  // Handle any remaining pending merge (last page was short)
-  if (pendingMerge) {
-    const formType = detectFormType(pendingMerge.text);
-    chunks.push({
-      content: pendingMerge.text,
-      pageNumber: pendingMerge.startPage,
-      chunkIndex,
-      tokenEstimate: estimateTokens(pendingMerge.text),
-      metadata: {
-        filename,
-        formType,
-      },
-    });
   }
 
   return chunks;

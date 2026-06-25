@@ -1,0 +1,209 @@
+{
+  "DocumentMetadata": { "Pages": 1 },
+  "Blocks": [
+    {
+      "BlockType": "PAGE",
+      "Id": "page-1",
+      "Page": 1,
+      "Geometry": { "BoundingBox": { "Left": 0, "Top": 0, "Width": 1, "Height": 1 } },
+      "Relationships": [
+        {
+          "Type": "CHILD",
+          "Ids": [
+            "line-1",
+            "key-1",
+            "value-1",
+            "table-1",
+            "layout-title-1",
+            "selection-standalone-1"
+          ]
+        }
+      ]
+    },
+    {
+      "BlockType": "LINE",
+      "Id": "line-1",
+      "Page": 1,
+      "Text": "Form 1040 Redacted Sample",
+      "Confidence": 99,
+      "Geometry": { "BoundingBox": { "Left": 0.1, "Top": 0.05, "Width": 0.5, "Height": 0.03 } },
+      "Relationships": [{ "Type": "CHILD", "Ids": ["word-form", "word-1040", "word-sample"] }]
+    },
+    {
+      "BlockType": "WORD",
+      "Id": "word-form",
+      "Page": 1,
+      "Text": "Form",
+      "Confidence": 99,
+      "Geometry": { "BoundingBox": { "Left": 0.1, "Top": 0.05, "Width": 0.06, "Height": 0.03 } }
+    },
+    {
+      "BlockType": "WORD",
+      "Id": "word-1040",
+      "Page": 1,
+      "Text": "1040",
+      "Confidence": 99,
+      "Geometry": { "BoundingBox": { "Left": 0.17, "Top": 0.05, "Width": 0.06, "Height": 0.03 } }
+    },
+    {
+      "BlockType": "WORD",
+      "Id": "word-sample",
+      "Page": 1,
+      "Text": "Sample",
+      "Confidence": 99,
+      "Geometry": { "BoundingBox": { "Left": 0.24, "Top": 0.05, "Width": 0.08, "Height": 0.03 } }
+    },
+    {
+      "BlockType": "KEY_VALUE_SET",
+      "Id": "key-1",
+      "Page": 1,
+      "EntityTypes": ["KEY"],
+      "Confidence": 98,
+      "Geometry": { "BoundingBox": { "Left": 0.1, "Top": 0.14, "Width": 0.2, "Height": 0.03 } },
+      "Relationships": [
+        { "Type": "CHILD", "Ids": ["word-label-1"] },
+        { "Type": "VALUE", "Ids": ["value-1"] }
+      ]
+    },
+    {
+      "BlockType": "KEY_VALUE_SET",
+      "Id": "value-1",
+      "Page": 1,
+      "EntityTypes": ["VALUE"],
+      "Confidence": 97,
+      "Geometry": { "BoundingBox": { "Left": 0.35, "Top": 0.14, "Width": 0.15, "Height": 0.03 } },
+      "Relationships": [{ "Type": "CHILD", "Ids": ["word-value-1"] }]
+    },
+    {
+      "BlockType": "WORD",
+      "Id": "word-label-1",
+      "Page": 1,
+      "Text": "Filing status",
+      "Confidence": 98,
+      "Geometry": { "BoundingBox": { "Left": 0.1, "Top": 0.14, "Width": 0.2, "Height": 0.03 } }
+    },
+    {
+      "BlockType": "WORD",
+      "Id": "word-value-1",
+      "Page": 1,
+      "Text": "Single",
+      "Confidence": 97,
+      "Geometry": { "BoundingBox": { "Left": 0.35, "Top": 0.14, "Width": 0.15, "Height": 0.03 } }
+    },
+    {
+      "BlockType": "TABLE",
+      "Id": "table-1",
+      "Page": 1,
+      "Confidence": 96,
+      "Geometry": { "BoundingBox": { "Left": 0.1, "Top": 0.25, "Width": 0.5, "Height": 0.2 } },
+      "Relationships": [
+        { "Type": "CHILD", "Ids": ["cell-1", "cell-2"] },
+        { "Type": "TABLE_TITLE", "Ids": ["table-title-1"] },
+        { "Type": "TABLE_FOOTER", "Ids": ["table-footer-1"] },
+        { "Type": "MERGED_CELL", "Ids": ["merged-cell-1"] }
+      ]
+    },
+    {
+      "BlockType": "TABLE_TITLE",
+      "Id": "table-title-1",
+      "Page": 1,
+      "Text": "Income Summary",
+      "Confidence": 96,
+      "Geometry": { "BoundingBox": { "Left": 0.1, "Top": 0.22, "Width": 0.25, "Height": 0.03 } },
+      "Relationships": [{ "Type": "CHILD", "Ids": ["word-title-1"] }]
+    },
+    {
+      "BlockType": "WORD",
+      "Id": "word-title-1",
+      "Page": 1,
+      "Text": "Income Summary",
+      "Confidence": 96,
+      "Geometry": { "BoundingBox": { "Left": 0.1, "Top": 0.22, "Width": 0.25, "Height": 0.03 } }
+    },
+    {
+      "BlockType": "CELL",
+      "Id": "cell-1",
+      "Page": 1,
+      "RowIndex": 1,
+      "ColumnIndex": 1,
+      "RowSpan": 1,
+      "ColumnSpan": 1,
+      "Confidence": 95,
+      "Geometry": { "BoundingBox": { "Left": 0.1, "Top": 0.27, "Width": 0.2, "Height": 0.04 } },
+      "Relationships": [{ "Type": "CHILD", "Ids": ["word-wages"] }]
+    },
+    {
+      "BlockType": "CELL",
+      "Id": "cell-2",
+      "Page": 1,
+      "RowIndex": 1,
+      "ColumnIndex": 2,
+      "RowSpan": 1,
+      "ColumnSpan": 1,
+      "Confidence": 95,
+      "Geometry": { "BoundingBox": { "Left": 0.35, "Top": 0.27, "Width": 0.2, "Height": 0.04 } },
+      "Relationships": [{ "Type": "CHILD", "Ids": ["word-amount"] }]
+    },
+    {
+      "BlockType": "WORD",
+      "Id": "word-wages",
+      "Page": 1,
+      "Text": "Wages",
+      "Confidence": 95,
+      "Geometry": { "BoundingBox": { "Left": 0.1, "Top": 0.27, "Width": 0.08, "Height": 0.03 } }
+    },
+    {
+      "BlockType": "WORD",
+      "Id": "word-amount",
+      "Page": 1,
+      "Text": "REDACTED_AMOUNT",
+      "Confidence": 95,
+      "Geometry": { "BoundingBox": { "Left": 0.35, "Top": 0.27, "Width": 0.18, "Height": 0.03 } }
+    },
+    {
+      "BlockType": "MERGED_CELL",
+      "Id": "merged-cell-1",
+      "Page": 1,
+      "RowIndex": 1,
+      "ColumnIndex": 1,
+      "RowSpan": 1,
+      "ColumnSpan": 2,
+      "Confidence": 94,
+      "Geometry": { "BoundingBox": { "Left": 0.1, "Top": 0.27, "Width": 0.45, "Height": 0.04 } },
+      "Relationships": [{ "Type": "CHILD", "Ids": ["cell-1", "cell-2"] }]
+    },
+    {
+      "BlockType": "TABLE_FOOTER",
+      "Id": "table-footer-1",
+      "Page": 1,
+      "Text": "All values redacted",
+      "Confidence": 96,
+      "Geometry": { "BoundingBox": { "Left": 0.1, "Top": 0.48, "Width": 0.25, "Height": 0.03 } },
+      "Relationships": [{ "Type": "CHILD", "Ids": ["word-footer-1"] }]
+    },
+    {
+      "BlockType": "WORD",
+      "Id": "word-footer-1",
+      "Page": 1,
+      "Text": "All values redacted",
+      "Confidence": 96,
+      "Geometry": { "BoundingBox": { "Left": 0.1, "Top": 0.48, "Width": 0.25, "Height": 0.03 } }
+    },
+    {
+      "BlockType": "SELECTION_ELEMENT",
+      "Id": "selection-standalone-1",
+      "Page": 1,
+      "SelectionStatus": "NOT_SELECTED",
+      "Confidence": 93,
+      "Geometry": { "BoundingBox": { "Left": 0.1, "Top": 0.55, "Width": 0.02, "Height": 0.02 } }
+    },
+    {
+      "BlockType": "LAYOUT_TITLE",
+      "Id": "layout-title-1",
+      "Page": 1,
+      "Confidence": 99,
+      "Geometry": { "BoundingBox": { "Left": 0.1, "Top": 0.04, "Width": 0.5, "Height": 0.05 } },
+      "Relationships": [{ "Type": "CHILD", "Ids": ["line-1"] }]
+    }
+  ]
+}

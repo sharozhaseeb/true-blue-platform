@@ -1,0 +1,167 @@
+
+> true-blue-platform@0.1.0 dev
+> next dev --hostname 127.0.0.1 --port 3000
+
+▲ Next.js 16.2.6 (Turbopack)
+- Local:         http://127.0.0.1:3000
+- Network:       http://127.0.0.1:3000
+- Environments: .env
+✓ Ready in 1909ms
+[sweeper] Starting cleanup...
+[sweeper] Cleanup complete
+
+○ Compiling /login ...
+ GET /login 200 in 4.2s (next.js: 3.6s, proxy.ts: 390ms, application-code: 224ms)
+ POST /api/auth/login 200 in 816ms (next.js: 458ms, proxy.ts: 21ms, application-code: 337ms)
+ GET /dashboard 200 in 629ms (next.js: 577ms, proxy.ts: 27ms, application-code: 25ms)
+ GET /api/auth/me 200 in 271ms (next.js: 247ms, proxy.ts: 7ms, application-code: 17ms)
+ GET /api/auth/me 200 in 22ms (next.js: 3ms, proxy.ts: 4ms, application-code: 15ms)
+ GET /api/auth/me 200 in 38ms (next.js: 4ms, proxy.ts: 7ms, application-code: 27ms)
+ GET /api/auth/me 200 in 43ms (next.js: 7ms, proxy.ts: 4ms, application-code: 32ms)
+ GET /dashboard/chat 200 in 2.4s (next.js: 1911ms, proxy.ts: 20ms, application-code: 441ms)
+ GET /api/auth/me 200 in 50ms (next.js: 7ms, proxy.ts: 9ms, application-code: 34ms)
+ GET /api/auth/me 200 in 41ms (next.js: 9ms, proxy.ts: 18ms, application-code: 15ms)
+ GET /api/chat/threads?limit=30 200 in 309ms (next.js: 217ms, proxy.ts: 15ms, application-code: 77ms)
+ GET /api/documents?status=COMPLETED&limit=100 200 in 319ms (next.js: 268ms, proxy.ts: 16ms, application-code: 35ms)
+{"level":"info","event":"chat.completed","time":"2026-06-23T23:14:08.797Z","firmId":"cmmmlw5100001nmq5ktw89kyl","userId":"cmmmlw57g0003nmq53zbmwb0r","threadId":"cmqr9h1420003utcoa8y2sqhk","hasDocumentFilter":true,"documentFilterCount":1,"retrievedCount":0,"citedCount":0,"insufficientEvidence":true,"warningCount":0,"durationMs":86,"mode":"local_retrieval_fallback","model":"m3-rag-non-document-message-v0","responseMode":"rag_qa","outputStatus":"non_document","outputSchemaVersion":"trueblue.chat.output.v1","templateId":"rag_qa.default.v1"}
+ POST /api/chat 200 in 1167ms (next.js: 1061ms, proxy.ts: 6ms, application-code: 101ms)
+ GET /api/chat/threads?limit=30 200 in 27ms (next.js: 3ms, proxy.ts: 6ms, application-code: 17ms)
+{"level":"info","event":"chat.completed","time":"2026-06-23T23:14:37.666Z","firmId":"cmmmlw5100001nmq5ktw89kyl","userId":"cmmmlw57g0003nmq53zbmwb0r","threadId":"cmqr9h1420003utcoa8y2sqhk","hasDocumentFilter":true,"documentFilterCount":1,"retrievedCount":1,"citedCount":1,"insufficientEvidence":false,"warningCount":0,"durationMs":178,"mode":"local_retrieval_fallback","model":"local-retrieval-fallback-v0","evidenceCoverage":{"version":1,"selectedDocumentIds":["cmqr9eb700001shbfkcy0al0f"],"retrievedByDocumentId":{"cmqr9eb700001shbfkcy0al0f":1},"finalByDocumentId":{"cmqr9eb700001shbfkcy0al0f":1},"noEvidenceDocumentIds":[]},"outputStatus":"answered","outputSchemaVersion":"trueblue.chat.output.v1","templateId":"rag_qa.default.v1"}
+ POST /api/chat 200 in 219ms (next.js: 10ms, proxy.ts: 10ms, application-code: 200ms)
+ GET /dashboard/chat 200 in 184ms (next.js: 75ms, proxy.ts: 63ms, application-code: 46ms)
+ GET /dashboard/chat 200 in 165ms (next.js: 64ms, proxy.ts: 60ms, application-code: 41ms)
+✓ Compiled in 121ms
+ GET /dashboard/chat 200 in 186ms (next.js: 88ms, proxy.ts: 64ms, application-code: 34ms)
+ GET /api/chat/threads?limit=5 200 in 219ms (next.js: 130ms, proxy.ts: 24ms, application-code: 65ms)
+ GET /dashboard 200 in 216ms (next.js: 23ms, proxy.ts: 17ms, application-code: 176ms)
+ GET /api/auth/me 200 in 55ms (next.js: 31ms, proxy.ts: 5ms, application-code: 19ms)
+ GET /api/auth/me 200 in 33ms (next.js: 2ms, proxy.ts: 4ms, application-code: 26ms)
+ GET /dashboard/chat 200 in 364ms (next.js: 17ms, proxy.ts: 23ms, application-code: 325ms)
+ GET /api/auth/me 200 in 26ms (next.js: 4ms, proxy.ts: 8ms, application-code: 13ms)
+ GET /api/auth/me 200 in 76ms (next.js: 9ms, proxy.ts: 18ms, application-code: 50ms)
+ GET /api/chat/threads?limit=30 200 in 90ms (next.js: 47ms, proxy.ts: 14ms, application-code: 30ms)
+ GET /api/documents?status=COMPLETED&limit=100 200 in 109ms (next.js: 43ms, proxy.ts: 15ms, application-code: 52ms)
+{"level":"info","event":"chat.completed","time":"2026-06-23T23:20:45.821Z","firmId":"cmmmlw5100001nmq5ktw89kyl","userId":"cmmmlw57g0003nmq53zbmwb0r","threadId":"cmqr9pjdf000gutco3yr4uri6","hasDocumentFilter":true,"documentFilterCount":1,"retrievedCount":0,"citedCount":0,"insufficientEvidence":true,"warningCount":0,"durationMs":204,"mode":"local_retrieval_fallback","model":"m3-rag-non-document-message-v0","responseMode":"rag_qa","outputStatus":"non_document","outputSchemaVersion":"trueblue.chat.output.v1","templateId":"rag_qa.default.v1"}
+ POST /api/chat 200 in 526ms (next.js: 294ms, proxy.ts: 14ms, application-code: 219ms)
+ GET /api/chat/threads?limit=30 200 in 31ms (next.js: 3ms, proxy.ts: 4ms, application-code: 24ms)
+{"level":"info","event":"chat.completed","time":"2026-06-23T23:20:58.250Z","firmId":"cmmmlw5100001nmq5ktw89kyl","userId":"cmmmlw57g0003nmq53zbmwb0r","threadId":"cmqr9pjdf000gutco3yr4uri6","hasDocumentFilter":true,"documentFilterCount":1,"retrievedCount":1,"citedCount":1,"insufficientEvidence":false,"warningCount":0,"durationMs":98,"mode":"local_retrieval_fallback","model":"local-retrieval-fallback-v0","evidenceCoverage":{"version":1,"selectedDocumentIds":["cmqr9eb700001shbfkcy0al0f"],"retrievedByDocumentId":{"cmqr9eb700001shbfkcy0al0f":1},"finalByDocumentId":{"cmqr9eb700001shbfkcy0al0f":1},"noEvidenceDocumentIds":[]},"outputStatus":"answered","outputSchemaVersion":"trueblue.chat.output.v1","templateId":"rag_qa.default.v1"}
+ POST /api/chat 200 in 113ms (next.js: 3ms, proxy.ts: 6ms, application-code: 105ms)
+ GET /api/chat/threads?limit=30 200 in 22ms (next.js: 2ms, proxy.ts: 7ms, application-code: 13ms)
+{"level":"info","event":"chat.completed","time":"2026-06-23T23:21:18.065Z","firmId":"cmmmlw5100001nmq5ktw89kyl","userId":"cmmmlw57g0003nmq53zbmwb0r","threadId":"cmqr9pjdf000gutco3yr4uri6","hasDocumentFilter":true,"documentFilterCount":1,"retrievedCount":1,"citedCount":1,"insufficientEvidence":false,"warningCount":0,"durationMs":61,"mode":"local_retrieval_fallback","model":"local-retrieval-fallback-v0","evidenceCoverage":{"version":1,"selectedDocumentIds":["cmqr9eb700001shbfkcy0al0f"],"retrievedByDocumentId":{"cmqr9eb700001shbfkcy0al0f":1},"finalByDocumentId":{"cmqr9eb700001shbfkcy0al0f":1},"noEvidenceDocumentIds":[]},"outputStatus":"answered","outputSchemaVersion":"trueblue.chat.output.v1","templateId":"rag_qa.default.v1"}
+ POST /api/chat 200 in 75ms (next.js: 3ms, proxy.ts: 6ms, application-code: 66ms)
+ GET /api/chat/threads?limit=30 200 in 16ms (next.js: 3ms, proxy.ts: 5ms, application-code: 8ms)
+ GET /dashboard/chat 200 in 156ms (next.js: 64ms, proxy.ts: 60ms, application-code: 33ms)
+ GET /dashboard/chat 200 in 188ms (next.js: 96ms, proxy.ts: 58ms, application-code: 34ms)
+ GET /dashboard/chat 200 in 199ms (next.js: 75ms, proxy.ts: 67ms, application-code: 57ms)
+ GET /dashboard/chat 200 in 163ms (next.js: 67ms, proxy.ts: 62ms, application-code: 34ms)
+{"level":"info","event":"chat.completed","time":"2026-06-23T23:25:55.817Z","firmId":"cmmmlw5100001nmq5ktw89kyl","userId":"cmmmlw57g0003nmq53zbmwb0r","threadId":"cmqr9pjdf000gutco3yr4uri6","hasDocumentFilter":true,"documentFilterCount":1,"retrievedCount":1,"citedCount":0,"insufficientEvidence":true,"warningCount":0,"durationMs":125,"mode":"local_retrieval_fallback","model":"local-retrieval-fallback-v0","evidenceCoverage":{"version":1,"selectedDocumentIds":["cmqr9eb700001shbfkcy0al0f"],"retrievedByDocumentId":{"cmqr9eb700001shbfkcy0al0f":1},"finalByDocumentId":{"cmqr9eb700001shbfkcy0al0f":0},"noEvidenceDocumentIds":["cmqr9eb700001shbfkcy0al0f"]},"outputStatus":"insufficient_evidence","outputSchemaVersion":"trueblue.chat.output.v1","templateId":"rag_qa.default.v1"}
+ POST /api/chat 200 in 390ms (next.js: 243ms, proxy.ts: 11ms, application-code: 136ms)
+ GET /api/chat/threads?limit=30 200 in 58ms (next.js: 25ms, proxy.ts: 9ms, application-code: 24ms)
+ GET /login 200 in 108ms (next.js: 69ms, proxy.ts: 5ms, application-code: 34ms)
+ GET /login 200 in 178ms (next.js: 66ms, proxy.ts: 61ms, application-code: 51ms)
+ GET /login 200 in 145ms (next.js: 65ms, proxy.ts: 52ms, application-code: 28ms)
+ GET /login 200 in 190ms (next.js: 66ms, proxy.ts: 53ms, application-code: 70ms)
+ GET /login 200 in 158ms (next.js: 66ms, proxy.ts: 55ms, application-code: 37ms)
+✓ Compiled in 89ms
+ GET /login 200 in 236ms (next.js: 111ms, proxy.ts: 62ms, application-code: 64ms)
+ GET /login 200 in 181ms (next.js: 64ms, proxy.ts: 54ms, application-code: 63ms)
+ POST /api/auth/login 200 in 469ms (next.js: 92ms, proxy.ts: 17ms, application-code: 360ms)
+ GET /dashboard 200 in 43ms (next.js: 15ms, proxy.ts: 9ms, application-code: 19ms)
+ GET /api/auth/me 200 in 68ms (next.js: 34ms, proxy.ts: 12ms, application-code: 22ms)
+ GET /api/auth/me 200 in 20ms (next.js: 3ms, proxy.ts: 4ms, application-code: 12ms)
+ GET /api/auth/me 200 in 41ms (next.js: 2ms, proxy.ts: 3ms, application-code: 35ms)
+ GET /api/auth/me 200 in 30ms (next.js: 3ms, proxy.ts: 11ms, application-code: 16ms)
+ GET /dashboard/chat 200 in 591ms (next.js: 152ms, proxy.ts: 14ms, application-code: 425ms)
+ GET /api/auth/me 200 in 24ms (next.js: 3ms, proxy.ts: 7ms, application-code: 14ms)
+ GET /api/auth/me 200 in 116ms (next.js: 5ms, proxy.ts: 12ms, application-code: 98ms)
+ GET /api/documents?status=COMPLETED&limit=100 200 in 140ms (next.js: 38ms, proxy.ts: 12ms, application-code: 90ms)
+ GET /api/chat/threads?limit=30 200 in 144ms (next.js: 82ms, proxy.ts: 11ms, application-code: 51ms)
+{"level":"info","event":"chat.completed","time":"2026-06-23T23:38:37.507Z","firmId":"cmmmlw5100001nmq5ktw89kyl","userId":"cmmmlw57g0003nmq53zbmwb0r","threadId":"cmqracics0017utco16dtn6uj","hasDocumentFilter":true,"documentFilterCount":16,"retrievedCount":0,"citedCount":0,"insufficientEvidence":true,"warningCount":0,"durationMs":110,"mode":"local_retrieval_fallback","model":"m3-rag-non-document-message-v0","responseMode":"rag_qa","outputStatus":"non_document","outputSchemaVersion":"trueblue.chat.output.v1","templateId":"rag_qa.default.v1"}
+ POST /api/chat 200 in 464ms (next.js: 319ms, proxy.ts: 5ms, application-code: 139ms)
+ GET /api/chat/threads?limit=30 200 in 40ms (next.js: 5ms, proxy.ts: 11ms, application-code: 24ms)
+✓ Compiled in 55ms
+ GET /dashboard/chat 200 in 184ms (next.js: 77ms, proxy.ts: 72ms, application-code: 35ms)
+ GET /dashboard/chat 200 in 331ms (next.js: 3ms, proxy.ts: 5ms, application-code: 323ms)
+ GET /api/auth/me 200 in 70ms (next.js: 43ms, proxy.ts: 6ms, application-code: 21ms)
+ GET /api/auth/me 200 in 77ms (next.js: 4ms, proxy.ts: 12ms, application-code: 60ms)
+ GET /api/documents?status=COMPLETED&limit=100 200 in 79ms (next.js: 27ms, proxy.ts: 12ms, application-code: 40ms)
+ GET /api/chat/threads?limit=30 200 in 80ms (next.js: 51ms, proxy.ts: 12ms, application-code: 17ms)
+ GET /login 200 in 947ms (next.js: 732ms, proxy.ts: 7ms, application-code: 208ms)
+✓ Compiled in 295ms
+ GET /login 200 in 219ms (next.js: 101ms, proxy.ts: 67ms, application-code: 50ms)
+✓ Compiled in 54ms
+ GET /login 200 in 161ms (next.js: 74ms, proxy.ts: 56ms, application-code: 31ms)
+✓ Compiled in 495ms
+ GET /login 200 in 253ms (next.js: 71ms, proxy.ts: 63ms, application-code: 120ms)
+ GET /login 200 in 133ms (next.js: 7ms, proxy.ts: 13ms, application-code: 112ms)
+ GET /login 200 in 71ms (next.js: 8ms, proxy.ts: 15ms, application-code: 48ms)
+ GET /login 200 in 71ms (next.js: 35ms, proxy.ts: 16ms, application-code: 20ms)
+✓ Compiled in 238ms
+ GET /login 200 in 180ms (next.js: 70ms, proxy.ts: 54ms, application-code: 56ms)
+ GET /login 200 in 57ms (next.js: 2ms, proxy.ts: 7ms, application-code: 47ms)
+ GET /login 200 in 52ms (next.js: 5ms, proxy.ts: 5ms, application-code: 41ms)
+ GET /login 200 in 53ms (next.js: 25ms, proxy.ts: 5ms, application-code: 23ms)
+✓ Compiled in 66ms
+ GET /login 200 in 160ms (next.js: 64ms, proxy.ts: 67ms, application-code: 29ms)
+✓ Compiled in 79ms
+ GET /login 200 in 166ms (next.js: 70ms, proxy.ts: 63ms, application-code: 33ms)
+✓ Compiled in 146ms
+ GET /login 200 in 204ms (next.js: 89ms, proxy.ts: 78ms, application-code: 37ms)
+✓ Compiled in 53ms
+ GET /login 200 in 211ms (next.js: 118ms, proxy.ts: 59ms, application-code: 34ms)
+✓ Compiled in 67ms
+ GET /login 200 in 177ms (next.js: 73ms, proxy.ts: 66ms, application-code: 39ms)
+✓ Compiled in 52ms
+ GET /login 200 in 189ms (next.js: 71ms, proxy.ts: 64ms, application-code: 54ms)
+✓ Compiled in 47ms
+ GET /login 200 in 157ms (next.js: 67ms, proxy.ts: 57ms, application-code: 33ms)
+ GET /login 200 in 278ms (next.js: 74ms, proxy.ts: 103ms, application-code: 101ms)
+ GET /login 200 in 162ms (next.js: 5ms, proxy.ts: 7ms, application-code: 150ms)
+ GET /login 200 in 156ms (next.js: 11ms, proxy.ts: 16ms, application-code: 129ms)
+ GET /login 200 in 154ms (next.js: 49ms, proxy.ts: 16ms, application-code: 89ms)
+ GET /login 200 in 154ms (next.js: 66ms, proxy.ts: 16ms, application-code: 72ms)
+ GET /login 200 in 158ms (next.js: 28ms, proxy.ts: 16ms, application-code: 114ms)
+ GET /login 200 in 178ms (next.js: 8ms, proxy.ts: 85ms, application-code: 86ms)
+ GET /login 200 in 165ms (next.js: 10ms, proxy.ts: 9ms, application-code: 146ms)
+ GET /login 200 in 151ms (next.js: 11ms, proxy.ts: 11ms, application-code: 129ms)
+ GET /login 200 in 151ms (next.js: 31ms, proxy.ts: 12ms, application-code: 108ms)
+ GET /login 200 in 168ms (next.js: 51ms, proxy.ts: 12ms, application-code: 105ms)
+ GET /login 200 in 168ms (next.js: 72ms, proxy.ts: 13ms, application-code: 83ms)
+ GET /login 200 in 145ms (next.js: 8ms, proxy.ts: 78ms, application-code: 59ms)
+ GET /login 200 in 136ms (next.js: 8ms, proxy.ts: 5ms, application-code: 124ms)
+ GET /login 200 in 174ms (next.js: 15ms, proxy.ts: 29ms, application-code: 131ms)
+ GET /login 200 in 152ms (next.js: 28ms, proxy.ts: 10ms, application-code: 114ms)
+ GET /login 200 in 153ms (next.js: 44ms, proxy.ts: 11ms, application-code: 99ms)
+ GET /login 200 in 173ms (next.js: 55ms, proxy.ts: 15ms, application-code: 103ms)
+ GET /login 200 in 155ms (next.js: 15ms, proxy.ts: 67ms, application-code: 73ms)
+ GET /login 200 in 174ms (next.js: 8ms, proxy.ts: 40ms, application-code: 127ms)
+ GET /login 200 in 160ms (next.js: 11ms, proxy.ts: 32ms, application-code: 117ms)
+ GET /login 200 in 138ms (next.js: 48ms, proxy.ts: 11ms, application-code: 78ms)
+ GET /login 200 in 144ms (next.js: 36ms, proxy.ts: 12ms, application-code: 96ms)
+ GET /login 200 in 143ms (next.js: 66ms, proxy.ts: 9ms, application-code: 68ms)
+ GET /login 200 in 174ms (next.js: 8ms, proxy.ts: 60ms, application-code: 106ms)
+ GET /login 200 in 198ms (next.js: 15ms, proxy.ts: 8ms, application-code: 175ms)
+ GET /login 200 in 206ms (next.js: 10ms, proxy.ts: 63ms, application-code: 134ms)
+ GET /login 200 in 202ms (next.js: 35ms, proxy.ts: 60ms, application-code: 107ms)
+ GET /login 200 in 159ms (next.js: 65ms, proxy.ts: 17ms, application-code: 76ms)
+ GET /login 200 in 153ms (next.js: 68ms, proxy.ts: 35ms, application-code: 49ms)
+ GET /login 200 in 148ms (next.js: 22ms, proxy.ts: 65ms, application-code: 62ms)
+ GET /login 200 in 149ms (next.js: 12ms, proxy.ts: 4ms, application-code: 133ms)
+ GET /login 200 in 147ms (next.js: 14ms, proxy.ts: 32ms, application-code: 102ms)
+ GET /login 200 in 145ms (next.js: 28ms, proxy.ts: 32ms, application-code: 85ms)
+ GET /login 200 in 150ms (next.js: 46ms, proxy.ts: 35ms, application-code: 70ms)
+ GET /login 200 in 127ms (next.js: 46ms, proxy.ts: 28ms, application-code: 53ms)
+ GET /login 200 in 138ms (next.js: 23ms, proxy.ts: 44ms, application-code: 72ms)
+ GET /login 200 in 180ms (next.js: 10ms, proxy.ts: 11ms, application-code: 160ms)
+ GET /login 200 in 171ms (next.js: 20ms, proxy.ts: 29ms, application-code: 121ms)
+ GET /login 200 in 171ms (next.js: 52ms, proxy.ts: 30ms, application-code: 89ms)
+ GET /login 200 in 169ms (next.js: 68ms, proxy.ts: 34ms, application-code: 67ms)
+ GET /login 200 in 143ms (next.js: 43ms, proxy.ts: 71ms, application-code: 30ms)
+ GET /login 200 in 179ms (next.js: 74ms, proxy.ts: 63ms, application-code: 42ms)
+ GET /login 200 in 244ms (next.js: 99ms, proxy.ts: 78ms, application-code: 67ms)
+✓ Compiled in 64ms
+ GET /login 200 in 218ms (next.js: 94ms, proxy.ts: 62ms, application-code: 63ms)
+✓ Compiled in 80ms
+ GET /login 200 in 166ms (next.js: 78ms, proxy.ts: 59ms, application-code: 29ms)
+✓ Compiled in 98ms
+ GET /login 200 in 157ms (next.js: 69ms, proxy.ts: 54ms, application-code: 33ms)
