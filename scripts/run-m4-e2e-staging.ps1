@@ -59,24 +59,94 @@ function Get-AuthHeaders {
 }
 
 function Invoke-Json([string]$Method, [string]$Path, $Body = $null) {
-  $headers = Get-AuthHeaders
-  $headers["Accept"] = "application/json"
-  $uri = Join-Url $BaseUrl $Path
-  if ($null -eq $Body) {
-    return Invoke-RestMethod -Method $Method -Uri $uri -Headers $headers
-  }
+  Add-Type -AssemblyName System.Net.Http
+  $handler = [System.Net.Http.HttpClientHandler]::new()
+  $handler.UseCookies = $false
+  $client = [System.Net.Http.HttpClient]::new($handler)
+  try {
+    foreach ($entry in (Get-AuthHeaders).GetEnumerator()) {
+      [void]$client.DefaultRequestHeaders.TryAddWithoutValidation($entry.Key, $entry.Value)
+    }
+    [void]$client.DefaultRequestHeaders.TryAddWithoutValidation("Accept", "application/json")
 
-  return Invoke-RestMethod `
-    -Method $Method `
-    -Uri $uri `
-    -Headers $headers `
-    -ContentType "application/json" `
-    -Body ($Body | ConvertTo-Json -Depth 20)
+    $uri = Join-Url $BaseUrl $Path
+    $request = [System.Net.Http.HttpRequestMessage]::new(
+      [System.Net.Http.HttpMethod]::new($Method),
+      $uri
+    )
+    if ($null -ne $Body) {
+      $json = $Body | ConvertTo-Json -Depth 20
+      $request.Content = [System.Net.Http.StringContent]::new(
+        $json,
+        [System.Text.Encoding]::UTF8,
+        "application/json"
+      )
+    }
+
+    $response = $client.SendAsync($request).Result
+    $text = $response.Content.ReadAsStringAsync().Result
+    if (-not $response.IsSuccessStatusCode) {
+      throw "$Method $Path failed with HTTP $([int]$response.StatusCode): $text"
+    }
+
+    if (-not $text) {
+      return $null
+    }
+    return $text | ConvertFrom-Json
+  } finally {
+    $client.Dispose()
+  }
 }
 
 function Upload-Pdf([string]$Path) {
+  if (Get-Command curl.exe -ErrorAction SilentlyContinue) {
+    $bodyFile = Join-Path $env:TEMP ("m4-upload-" + [guid]::NewGuid().ToString("N") + ".json")
+    $errFile = Join-Path $env:TEMP ("m4-upload-" + [guid]::NewGuid().ToString("N") + ".err")
+    try {
+      $curlArgs = @(
+        "-sS",
+        "-o", $bodyFile,
+        "-w", "%{http_code}",
+        "-H", "Accept: application/json"
+      )
+      if ($CookieFile) {
+        $curlArgs += @("-b", $CookieFile)
+      }
+      if ($BearerToken) {
+        $curlArgs += @("-H", "Authorization: Bearer $BearerToken")
+      }
+      $curlArgs += @(
+        "-X", "POST",
+        (Join-Url $BaseUrl "/api/documents/upload"),
+        "-F", "file=@$Path;type=application/pdf"
+      )
+
+      $statusText = & curl.exe @curlArgs 2> $errFile
+      $text = if (Test-Path -LiteralPath $bodyFile) {
+        Get-Content -LiteralPath $bodyFile -Raw
+      } else {
+        ""
+      }
+      $stderr = if (Test-Path -LiteralPath $errFile) {
+        Get-Content -LiteralPath $errFile -Raw
+      } else {
+        ""
+      }
+      $statusCode = [int]$statusText
+      if ($statusCode -lt 200 -or $statusCode -ge 300) {
+        throw "Upload failed with HTTP $($statusCode): $text $stderr"
+      }
+
+      return $text | ConvertFrom-Json
+    } finally {
+      Remove-Item -LiteralPath $bodyFile, $errFile -Force -ErrorAction SilentlyContinue
+    }
+  }
+
   Add-Type -AssemblyName System.Net.Http
-  $client = [System.Net.Http.HttpClient]::new()
+  $handler = [System.Net.Http.HttpClientHandler]::new()
+  $handler.UseCookies = $false
+  $client = [System.Net.Http.HttpClient]::new($handler)
   try {
     foreach ($entry in (Get-AuthHeaders).GetEnumerator()) {
       [void]$client.DefaultRequestHeaders.TryAddWithoutValidation($entry.Key, $entry.Value)
@@ -148,19 +218,29 @@ $vectorEvidence = [pscustomobject]@{
 }
 
 if ($ExpectVectorRetrieval) {
-  try {
-    $vectorStatus = Invoke-Json "GET" $vectorEvidence.endpoint
-    $vectorEvidence.checked = $true
-    $vectorEvidence.detail = $vectorStatus
-    $vectorEvidence.ok =
-      $vectorStatus.isActive -eq $true -or
-      $vectorStatus.status -eq "ACTIVE" -or
-      $vectorStatus.index.status -eq "ACTIVE"
-  } catch {
-    $vectorEvidence.checked = $true
-    $vectorEvidence.detail =
-      "No gated vector-index status endpoint was available. Use DB-side staging runbook evidence for document_vector_indexes."
-  }
+  do {
+    try {
+      $vectorStatus = Invoke-Json "GET" $vectorEvidence.endpoint
+      $vectorEvidence.checked = $true
+      $vectorEvidence.detail = $vectorStatus
+      $vectorEvidence.ok =
+        $vectorStatus.isActive -eq $true -or
+        $vectorStatus.status -eq "ACTIVE" -or
+        $vectorStatus.index.status -eq "ACTIVE"
+
+      if ($vectorEvidence.ok -or $vectorStatus.status -eq "FAILED") {
+        break
+      }
+    } catch {
+      $vectorEvidence.checked = $true
+      $vectorEvidence.detail =
+        "No gated vector-index status endpoint was available. Use DB-side staging runbook evidence for document_vector_indexes."
+      break
+    }
+
+    Start-Sleep -Seconds 5
+  } while ((Get-Date) -lt $deadline)
+
   Assert-Check $vectorEvidence.ok "vector retrieval was expected but active vector index evidence was not proven" $failures
 }
 

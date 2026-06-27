@@ -1,5 +1,27 @@
 # Staging Environment — True Blue Financial Intelligence Platform
 
+## M4 Current Target
+
+M4 deployment uses AWS CLI profile `trueblue-m4` in account `536573256060`, not the default AWS profile and not the older local `trueblue` profile unless they are explicitly verified against that account.
+
+```bash
+aws sts get-caller-identity --profile trueblue-m4 --query Account --output text
+```
+
+Current M4 staging target:
+
+- EC2 instance: `i-0a34ef089984569b6`
+- Public IP: `52.70.0.80`
+- SSM status: online
+- ECR repos:
+  - `536573256060.dkr.ecr.us-east-1.amazonaws.com/true-blue-platform-app`
+  - `536573256060.dkr.ecr.us-east-1.amazonaws.com/true-blue-platform-migrate`
+  - `536573256060.dkr.ecr.us-east-1.amazonaws.com/true-blue-platform-worker`
+- Upload bucket: `trueblue-documents-536573256060-staging`
+- Textract artifact bucket: `trueblue-document-artifacts-536573256060-staging`
+
+If the AWS access key starts with `ASIA`, the credentials are temporary STS credentials and require `aws_session_token`.
+
 ## Overview
 
 | Property | Value |

@@ -1,5 +1,6 @@
 node_modules
 .next
+.next-*
 .git
 .env
 .env.*
@@ -9,6 +10,10 @@ docker-compose.prod.yml
 docker-data/
 docs/
 *.md
+base-document-output-*/
+tmp-m3-v3/
+staging-*.json
+remote-app-logs-postdeploy.txt
 .vscode/
 .idea/
 Thumbs.db

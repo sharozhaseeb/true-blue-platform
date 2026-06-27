@@ -1,9 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { fetchWithAuth } from "@/lib/fetch-with-auth";
+import { BRAND } from "@/lib/brand";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { Toaster } from "@/components/ui/sonner";
 
 type NavUser = {
   firmId: string | null;
@@ -15,6 +18,8 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const router = useRouter();
+  const pathname = usePathname();
+  const isChat = pathname === "/dashboard/chat";
   const [user, setUser] = useState<NavUser | null>(null);
 
   useEffect(() => {
@@ -47,13 +52,20 @@ export default function DashboardLayout({
   }
 
   return (
+    <TooltipProvider>
     <div className="min-h-screen bg-gray-50">
       <nav className="border-b border-gray-200 bg-white">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div
+          className={
+            isChat
+              ? "mx-auto max-w-7xl px-4 sm:px-6 lg:max-w-none lg:px-4"
+              : "mx-auto max-w-7xl px-4 sm:px-6 lg:px-8"
+          }
+        >
           <div className="flex h-14 items-center justify-between">
             <div className="flex items-center gap-6">
               <Link href="/dashboard" className="text-lg font-semibold text-gray-900">
-                True Blue
+                {BRAND.name}
               </Link>
               <div className="flex items-center gap-1 text-sm">
                 <Link
@@ -81,9 +93,17 @@ export default function DashboardLayout({
           </div>
         </div>
       </nav>
-      <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+      <main
+        className={
+          isChat
+            ? "mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:max-w-none lg:px-0 lg:py-0"
+            : "mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8"
+        }
+      >
         {children}
       </main>
     </div>
+    <Toaster />
+    </TooltipProvider>
   );
 }

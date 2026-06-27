@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { BRAND } from "@/lib/brand";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -13,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "EulerTel — Financial Intelligence Platform",
+  title: `${BRAND.name} — Financial Intelligence Platform`,
   description: "Secure document-based AI platform for tax professionals",
 };
 

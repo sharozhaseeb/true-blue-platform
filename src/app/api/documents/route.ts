@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 import { getRequestContext } from "@/lib/tenant";
 import { internalError, unauthorized } from "@/lib/errors";
 import { prisma } from "@/lib/prisma";
-import { DocumentStatus } from "@prisma/client";
+import { DocumentStatus, Prisma } from "@prisma/client";
 
 /**
  * GET /api/documents
@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
     const skip = (page - 1) * limit;
 
     // Build where clause
-    const where: Record<string, any> = {};
+    const where: Prisma.DocumentWhereInput = {};
 
     // Tenant scoping
     if (ctx.role === "PLATFORM_ADMIN") {
@@ -91,7 +91,7 @@ export async function GET(request: NextRequest) {
       page,
       limit,
     });
-  } catch (err) {
+  } catch {
     console.error("[documents] Failed to list documents");
     return internalError("Failed to list documents");
   }

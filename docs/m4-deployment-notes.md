@@ -1,5 +1,38 @@
 # M4 Deployment Notes
 
+## AWS Target For M4
+
+Use the AWS CLI profile `trueblue-m4` for M4 deployment work.
+
+- Account: `536573256060`
+- Region: `us-east-1`
+- Staging instance: `i-0a34ef089984569b6`
+- Current public host: `52.70.0.80`
+- SSM status: online
+- Instance profile: `TrueBlueStagingAppWorkerInstanceProfile`
+
+Do not use the default AWS profile or the older local `trueblue` profile for M4 unless `aws sts get-caller-identity` confirms account `536573256060`. Those profiles have previously resolved to non-M4 accounts. If the access key starts with `ASIA`, it is a temporary STS key and `aws_session_token` is required.
+
+Verify the target before any deploy action:
+
+```powershell
+aws sts get-caller-identity --profile trueblue-m4 --query Account --output text
+aws ssm describe-instance-information --profile trueblue-m4 --region us-east-1
+```
+
+M4 AWS resources already present in account `536573256060`:
+
+- App image repo: `536573256060.dkr.ecr.us-east-1.amazonaws.com/true-blue-platform-app`
+- Migration image repo: `536573256060.dkr.ecr.us-east-1.amazonaws.com/true-blue-platform-migrate`
+- Worker image repo: `536573256060.dkr.ecr.us-east-1.amazonaws.com/true-blue-platform-worker`
+- Upload bucket: `trueblue-documents-536573256060-staging`
+- Textract artifact bucket: `trueblue-document-artifacts-536573256060-staging`
+- KMS key alias: `alias/trueblue-staging-documents`
+- KMS key ARN: `arn:aws:kms:us-east-1:536573256060:key/8e4eec90-60cc-4e55-a7a8-dc9dc81b5958`
+- Textract SNS topic: `arn:aws:sns:us-east-1:536573256060:trueblue-textract-complete-staging`
+- Textract SQS queue: `https://queue.amazonaws.com/536573256060/trueblue-textract-jobs-staging`
+- Textract publish role: `arn:aws:iam::536573256060:role/TrueBlueTextractPublishRole-staging`
+
 ## Environment
 
 M4 depends on the baseline application deployment environment plus the chat/retrieval variables below. Use `.env.staging.example` as the source of truth for required staging keys, then verify the real `.env.staging` before handoff.
@@ -7,17 +40,22 @@ M4 depends on the baseline application deployment environment plus the chat/retr
 Baseline app/deployment variables:
 
 - `APP_IMAGE`
+- `MIGRATE_IMAGE`
 - `WORKER_IMAGE`
 - `DATABASE_URL`
-- `JWT_SECRET`
+- `POSTGRES_USER`
+- `POSTGRES_PASSWORD`
+- `POSTGRES_DB`
+- `JWT_ACCESS_SECRET`
 - `JWT_REFRESH_SECRET`
+- `JWT_ACCESS_EXPIRY`
+- `JWT_REFRESH_EXPIRY`
 - `NEXT_PUBLIC_APP_URL`
+- `USE_SECURE_COOKIES`
+- `ENABLE_TEST_ENDPOINTS`
 - `AWS_REGION`
 - `AWS_S3_BUCKET`
 - `AWS_S3_KMS_KEY_ID`
-- `UPLOAD_MAX_FILE_SIZE`
-- `RATE_LIMIT_MAX_REQUESTS`
-- `RATE_LIMIT_WINDOW_MS`
 
 Textract/OCR worker variables, required when the worker service is deployed:
 
@@ -26,8 +64,7 @@ Textract/OCR worker variables, required when the worker service is deployed:
 - `TEXTRACT_SQS_QUEUE_URL`
 - `TEXTRACT_NOTIFICATION_ROLE_ARN`
 - `ENABLE_TEXTRACT_PIPELINE`
-- `TEXTRACT_ADAPTER_ID`
-- `TEXTRACT_ADAPTER_VERSION`
+- `ENABLE_BASE_DOCUMENT_DEBUG_API`
 
 M4 chat and retrieval variables:
 
@@ -49,6 +86,7 @@ The database migration adds `chat_threads."outputTemplate"` as nullable JSONB. E
 Preflight the staging env before redeploying:
 
 ```powershell
+npm run verify:m4-deploy
 docker compose --env-file .env.staging -f docker-compose.prod.yml config --quiet
 npx prisma validate
 ```
@@ -64,6 +102,7 @@ Run from `true-blue-platform`:
 ```powershell
 npm run verify:chat-output
 npm run verify:m4-structured-output
+npm run verify:m4-deploy
 npm run verify:m4-quality
 npm run verify:m3-quality
 npx prisma validate
@@ -93,7 +132,7 @@ Run against a deployed staging host with a real authenticated session:
 ```
 
 Use `-BearerToken` instead of `-CookieFile` when staging auth provides a test token.
-Create `cookies.txt` first by logging in through the API or browser-exported cookie workflow described in `m4-acceptance-testing.md`.
+Create `cookies.txt` first by logging in through the API or browser-exported cookie workflow described in `m4-acceptance-testing.md` (client UAT now lives in `m4-client-acceptance-testing.md`).
 
 When vector retrieval is enabled, pass `-ExpectVectorRetrieval`. The script reads `/api/internal/m4/vector-index-status?documentId=...` to prove active vector readiness without exposing vectors, embeddings, prompts, source text, snippets, or secrets. If an older deployment does not include that endpoint, attach DB-side evidence from `document_vector_indexes` showing an active index, namespace, generation, chunk count, vector ID count, embedding model/dimension, parser version, chunk strategy, and `isActive`.
 

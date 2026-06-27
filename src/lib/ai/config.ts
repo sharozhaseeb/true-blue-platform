@@ -3,6 +3,8 @@ export interface M3ProviderConfig {
   vectorIndexingEnabled: boolean;
   vectorRetrievalEnabled: boolean;
   vectorMinScore: number;
+  rerankEnabled: boolean;
+  rerankModel: string;
   openAiApiKey?: string;
   aiModel: string;
   embeddingModel: string;
@@ -19,6 +21,9 @@ const DEFAULT_EMBEDDING_MODEL = "text-embedding-3-small";
 const DEFAULT_EMBEDDING_DIMENSION = 1536;
 const DEFAULT_PINECONE_NAMESPACE_PREFIX = "trueblue";
 const DEFAULT_VECTOR_MIN_SCORE = 0.25;
+// Free Pinecone-hosted cross-encoder (Apache-2.0, multilingual). Reranking is
+// best-effort and falls back to vector-score order on any failure.
+const DEFAULT_RERANK_MODEL = "bge-reranker-v2-m3";
 
 function clean(value: string | undefined): string | undefined {
   const trimmed = value?.trim();
@@ -27,6 +32,17 @@ function clean(value: string | undefined): string | undefined {
 
 function readFlag(value: string | undefined): boolean {
   return clean(value)?.toLowerCase() === "true";
+}
+
+// Like readFlag, but defaults to `fallback` when the variable is unset. Used for
+// flags that ship ON by default (you opt out with an explicit `=false`).
+function readFlagWithDefault(value: string | undefined, fallback: boolean): boolean {
+  const cleaned = clean(value);
+  if (cleaned === undefined) {
+    return fallback;
+  }
+
+  return cleaned.toLowerCase() === "true";
 }
 
 function readPositiveInteger(
@@ -91,6 +107,10 @@ export function readM3ProviderConfig(
     "VECTOR_MIN_SCORE",
     validationErrors
   );
+  // Retrieval reranking ships ON by default; set ENABLE_RERANK=false to A/B the
+  // raw vector-score ordering. No new key/dependency — reuses PINECONE_API_KEY.
+  const rerankEnabled = readFlagWithDefault(env.ENABLE_RERANK, true);
+  const rerankModel = clean(env.RERANK_MODEL) ?? DEFAULT_RERANK_MODEL;
   const embeddingDimension = readPositiveInteger(
     env.EMBEDDING_DIMENSION,
     DEFAULT_EMBEDDING_DIMENSION,
@@ -106,6 +126,8 @@ export function readM3ProviderConfig(
     vectorIndexingEnabled,
     vectorRetrievalEnabled,
     vectorMinScore,
+    rerankEnabled,
+    rerankModel,
     openAiApiKey: clean(env.OPENAI_API_KEY),
     aiModel: clean(env.AI_MODEL) ?? DEFAULT_AI_MODEL,
     embeddingModel: clean(env.EMBEDDING_MODEL) ?? DEFAULT_EMBEDDING_MODEL,

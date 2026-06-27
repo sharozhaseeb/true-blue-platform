@@ -193,7 +193,7 @@ export async function POST(request: NextRequest) {
       }
       return internalError("Document processing failed");
     }
-  } catch (err) {
+  } catch {
     console.error("[upload] Unexpected error");
     return internalError("Upload failed");
   } finally {

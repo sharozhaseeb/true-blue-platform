@@ -788,7 +788,7 @@ function formatArtifactHits(hits) {
 }
 
 function evaluatePageExpectation(expectation, context, failures) {
-  const { filename, processedPages, chunks } = context;
+  const { processedPages, chunks } = context;
   const expectationLabel = expectation.label;
   const page = processedPages.find((entry) => entry.pageNumber === expectation.page);
 

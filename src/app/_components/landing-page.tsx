@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { Check, Shield, Server } from "lucide-react";
 import { BackgroundGradientAnimation } from "@/components/ui/background-gradient-animation";
+import { BRAND } from "@/lib/brand";
 
 export default function LandingPage() {
   return (
@@ -29,7 +30,7 @@ export default function LandingPage() {
                   </span>
                 </div>
                 <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-gray-900">
-                  EulerTel
+                  {BRAND.name}
                 </h1>
                 <p className="mt-3 text-xs font-semibold tracking-[0.25em] text-gray-400 uppercase">
                   Financial Intelligence Platform
@@ -118,7 +119,7 @@ export default function LandingPage() {
 
         <footer className="px-6 py-4">
           <p className="text-center text-xs text-white/25">
-            &copy; 2026 True Blue Financial Intelligence LLC
+            &copy; 2026 {BRAND.legalName}
           </p>
         </footer>
       </div>

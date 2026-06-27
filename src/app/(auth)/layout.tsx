@@ -2,6 +2,7 @@
 
 import { BackgroundGradientAnimation } from "@/components/ui/background-gradient-animation";
 import { ShieldCheck, Server, FileText, Brain, Building2 } from "lucide-react";
+import { BRAND } from "@/lib/brand";
 
 export default function AuthLayout({
   children,
@@ -30,7 +31,7 @@ export default function AuthLayout({
                 <span className="text-sm font-bold text-white">TB</span>
               </div>
               <span className="text-lg font-semibold text-white/90">
-                True Blue
+                {BRAND.name}
               </span>
             </div>
           </div>
@@ -96,7 +97,7 @@ export default function AuthLayout({
                 <span className="text-sm font-bold text-white">TB</span>
               </div>
               <span className="text-base font-semibold text-gray-900">
-                True Blue
+                {BRAND.name}
               </span>
             </div>
           </div>
@@ -109,7 +110,7 @@ export default function AuthLayout({
           {/* Footer */}
           <footer className="px-6 py-4">
             <p className="text-center text-xs text-gray-400">
-              &copy; 2026 True Blue Financial Intelligence LLC
+              &copy; 2026 {BRAND.legalName}
             </p>
           </footer>
         </div>

@@ -1,12 +1,12 @@
 #!/usr/bin/env node
-/* eslint-disable no-console */
+/* eslint-disable @typescript-eslint/no-require-imports */
 
 const fs = require("fs");
 const path = require("path");
 
 const fixtureConfig = require("./fixtures/m2-pdf-quality-fixtures.js");
 
-function parseArgs(argv) {
+function parseArgs() {
   return {
     baseUrl: process.env.M2_BASE_URL || "http://54.208.102.72",
     email: process.env.M2_EMAIL || "admin@acmetax.com",
@@ -410,7 +410,7 @@ async function fetchChunks(baseUrl, cookie, documentId, limit) {
 }
 
 async function main() {
-  const options = parseArgs(process.argv.slice(2));
+  const options = parseArgs();
   if (!fs.existsSync(options.pdfDir)) {
     throw new Error(`pdf directory not found: ${options.pdfDir}`);
   }

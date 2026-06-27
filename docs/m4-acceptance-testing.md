@@ -1,5 +1,7 @@
 # Milestone 4 - Client Acceptance Testing Guide
 
+> ⚠️ **SUPERSEDED for client UAT by `m4-client-acceptance-testing.md`.** This file's UI-layout description (three-panel History/Sources/Chat) is stale — the deployed build uses the redesigned full-bleed layout. Retained only for the engineer cookie-auth / E2E workflow.
+
 **Milestone:** Output Generation, Testing & Deployment  
 **Primary test URL:** Use the M4 endpoint provided in the delivery message.  
 **Current schema version:** `trueblue.chat.output.v1`

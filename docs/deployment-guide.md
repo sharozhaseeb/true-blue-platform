@@ -19,6 +19,38 @@ Complete step-by-step procedure for deploying the platform to AWS EC2 staging.
 
 ## AWS Resource Summary
 
+### M4 Active AWS Target
+
+For M4 deployment, use AWS CLI profile `trueblue-m4` and confirm account `536573256060` before running AWS, ECR, or SSM commands:
+
+```bash
+aws sts get-caller-identity --profile trueblue-m4 --query Account --output text
+```
+
+The default AWS profile and the older local `trueblue` profile have previously resolved to non-M4 accounts. If credentials use an `ASIA...` access key, they are temporary STS credentials and must include `aws_session_token`.
+
+Verified M4 target resources:
+
+| Resource | Value |
+|---|---|
+| AWS account | `536573256060` |
+| Region | `us-east-1` |
+| EC2 instance | `i-0a34ef089984569b6` |
+| Public IP | `52.70.0.80` |
+| SSM status | Online |
+| Instance profile | `TrueBlueStagingAppWorkerInstanceProfile` |
+| App ECR repo | `536573256060.dkr.ecr.us-east-1.amazonaws.com/true-blue-platform-app` |
+| Migrate ECR repo | `536573256060.dkr.ecr.us-east-1.amazonaws.com/true-blue-platform-migrate` |
+| Worker ECR repo | `536573256060.dkr.ecr.us-east-1.amazonaws.com/true-blue-platform-worker` |
+| Upload bucket | `trueblue-documents-536573256060-staging` |
+| Textract artifact bucket | `trueblue-document-artifacts-536573256060-staging` |
+| KMS key | `arn:aws:kms:us-east-1:536573256060:key/8e4eec90-60cc-4e55-a7a8-dc9dc81b5958` |
+| Textract SNS topic | `arn:aws:sns:us-east-1:536573256060:trueblue-textract-complete-staging` |
+| Textract SQS queue | `https://queue.amazonaws.com/536573256060/trueblue-textract-jobs-staging` |
+| Textract publish role | `arn:aws:iam::536573256060:role/TrueBlueTextractPublishRole-staging` |
+
+The legacy table below is retained for historical context and should not be used for M4 deployment decisions.
+
 | Resource | Value |
 |---|---|
 | EC2 Instance | `i-082a8ba117faac61c` (t3.small, Amazon Linux 2023) |
@@ -82,12 +114,14 @@ Created a multi-stage `Dockerfile` based on `node:20-slim` (Debian):
 
 ### 1.5 Create docker-compose.prod.yml
 
-Created `docker-compose.prod.yml` with 3 services + 1 setup profile:
+`docker-compose.prod.yml` now expects prebuilt image references from `.env.staging` and includes 4 runtime services + 1 setup profile:
 
 - **db** — PostgreSQL 16 Alpine, port 5432 (internal), health check, persistent volume
 - **migrate** — One-shot service (profile: setup), runs `npx prisma migrate deploy`
 - **app** — Next.js standalone, port 3000 (internal), depends on db healthy
 - **nginx** — Reverse proxy, port 80 (exposed), depends on app
+
+M4 update: the current compose file also includes `textract-worker`, which runs from `WORKER_IMAGE` and must be deployed alongside `app` for document processing/vector indexing.
 
 ### 1.6 Create nginx/nginx.conf
 
@@ -100,6 +134,8 @@ Created `nginx/nginx.conf` with:
 - Static asset caching
 
 ### 1.7 Create supporting files
+
+M4 deployment should start from `.env.staging.example`, write real values into `.env.staging`, and pass `npm run verify:m4-deploy` before redeploying.
 
 - `.env.staging` — Template for staging environment variables
 - `scripts/test-build.sh` — Local Docker build verification script
@@ -331,6 +367,25 @@ ssh-keyscan github.com >> ~/.ssh/known_hosts
 
 ## Phase 4 — Deployment
 
+### 4.0 M4 Active Deployment Path
+
+For M4 client testing, follow this path. The older `.env` and server-side build subsections below are historical notes and are superseded by the image-based `.env.staging` flow.
+
+```bash
+cp .env.staging.example .env.staging
+# Edit .env.staging with real values. Do not leave SET_* placeholders.
+npm run verify:m4-deploy
+docker compose --env-file .env.staging -f docker-compose.prod.yml config --quiet
+docker compose --env-file .env.staging -f docker-compose.prod.yml --profile setup config --images
+docker compose --env-file .env.staging -f docker-compose.prod.yml pull app migrate textract-worker
+docker compose --env-file .env.staging -f docker-compose.prod.yml up -d db
+docker compose --env-file .env.staging -f docker-compose.prod.yml --profile setup run --rm migrate
+docker compose --env-file .env.staging -f docker-compose.prod.yml up -d app textract-worker nginx
+docker compose --env-file .env.staging -f docker-compose.prod.yml ps
+```
+
+After deployment, run `scripts/run-m4-e2e-staging.ps1` from a trusted machine with the canonical HTTPS M4 URL, an authenticated cookie/token, a non-sensitive sample PDF, and `-ExpectVectorRetrieval`.
+
 ### 4.1 Clone the repository
 
 ```bash
@@ -338,7 +393,7 @@ git clone git@github.com:sharozhaseeb/true-blue-platform.git
 cd true-blue-platform
 ```
 
-### 4.2 Create the .env file
+### 4.2 Legacy .env Example (Superseded For M4)
 
 ```bash
 cat > .env << EOF
@@ -373,7 +428,7 @@ NODE_ENV=production
 EOF
 ```
 
-### 4.3 Build Docker images
+### 4.3 Legacy Server-Side Build (Superseded For M4)
 
 ```bash
 docker compose -f docker-compose.prod.yml build --no-cache
@@ -479,30 +534,34 @@ docker compose -f docker-compose.prod.yml ps
 ssh -i ~/.ssh/trueblue-staging.pem ec2-user@54.208.102.72
 cd true-blue-platform
 
-# Update image refs in .env
+# Update image refs in .env.staging
 # APP_IMAGE=docker.io/<dockerhub-user>/true-blue-platform-app:<release-tag>
 # MIGRATE_IMAGE=docker.io/<dockerhub-user>/true-blue-platform-migrate:<release-tag>
-vi .env
+# WORKER_IMAGE=docker.io/<dockerhub-user>/true-blue-platform-worker:<release-tag>
+vi .env.staging
 
 # Verify the resolved images before pulling
-grep -E '^(APP_IMAGE|MIGRATE_IMAGE)=' .env
-docker compose -f docker-compose.prod.yml config | grep 'image:'
+grep -E '^(APP_IMAGE|MIGRATE_IMAGE|WORKER_IMAGE)=' .env.staging
+npm run verify:m4-deploy
+docker compose --env-file .env.staging -f docker-compose.prod.yml config --quiet
+docker compose --env-file .env.staging -f docker-compose.prod.yml --profile setup config --images
 
-# Pull the new app and migration images
-docker compose -f docker-compose.prod.yml pull app migrate
+# Pull the new app, migration, and worker images
+docker compose --env-file .env.staging -f docker-compose.prod.yml pull app migrate textract-worker
 
 # If there are new database migrations, take a backup first
-docker compose -f docker-compose.prod.yml exec db pg_dump -U trueblue trueblue | gzip > ~/backup-$(date +%Y%m%d-%H%M%S).sql.gz
+docker compose --env-file .env.staging -f docker-compose.prod.yml exec db pg_dump -U trueblue trueblue | gzip > ~/backup-$(date +%Y%m%d-%H%M%S).sql.gz
 
 # Run migrations + seed from the migration image
-docker compose -f docker-compose.prod.yml --profile setup run --rm migrate
+docker compose --env-file .env.staging -f docker-compose.prod.yml --profile setup run --rm migrate
 
 # Start or refresh the runtime services
-docker compose -f docker-compose.prod.yml up -d app nginx
+docker compose --env-file .env.staging -f docker-compose.prod.yml up -d app textract-worker nginx
 
 # Verify
-docker compose -f docker-compose.prod.yml ps
-curl -s -o /dev/null -w "%{http_code}" http://54.208.102.72/
+docker compose --env-file .env.staging -f docker-compose.prod.yml ps
+BASE_URL=$(grep '^NEXT_PUBLIC_APP_URL=' .env.staging | cut -d= -f2-)
+curl -s -o /dev/null -w "%{http_code}" "$BASE_URL/"
 ```
 
 ### Quick redeploy (no migration changes)
@@ -510,11 +569,12 @@ curl -s -o /dev/null -w "%{http_code}" http://54.208.102.72/
 ```bash
 ssh -i ~/.ssh/trueblue-staging.pem ec2-user@54.208.102.72
 cd true-blue-platform
-vi .env
-grep -E '^(APP_IMAGE|MIGRATE_IMAGE)=' .env
-docker compose -f docker-compose.prod.yml config | grep 'image:'
-docker compose -f docker-compose.prod.yml pull app
-docker compose -f docker-compose.prod.yml up -d app nginx
+vi .env.staging
+grep -E '^(APP_IMAGE|MIGRATE_IMAGE|WORKER_IMAGE)=' .env.staging
+npm run verify:m4-deploy
+docker compose --env-file .env.staging -f docker-compose.prod.yml --profile setup config --images
+docker compose --env-file .env.staging -f docker-compose.prod.yml pull app textract-worker
+docker compose --env-file .env.staging -f docker-compose.prod.yml up -d app textract-worker nginx
 ```
 
 ### Seed the database

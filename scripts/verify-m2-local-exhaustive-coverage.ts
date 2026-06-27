@@ -1,5 +1,3 @@
-/* eslint-disable no-console */
-
 import fs from "fs";
 import path from "path";
 import fixtureConfig from "./fixtures/m2-pdf-quality-fixtures.js";

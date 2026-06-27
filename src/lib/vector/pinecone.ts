@@ -208,6 +208,87 @@ export class PineconeVectorStore {
   }
 }
 
+// --- Reranking (Pinecone Inference) -----------------------------------------
+//
+// Free, single-vendor reranking via `pc.inference.rerank(...)` on the client we
+// already import. Confirmed against the installed SDK types
+// (@pinecone-database/pinecone v7.2.0, `dist/inference/rerank.d.ts`): the method
+// takes a single options object — `{ model, query, documents, topN?,
+// returnDocuments?, rankFields?, parameters? }` — and returns
+// `{ data: Array<{ index, score }>, ... }` with scores normalized 0..1. The
+// `documents` may be `string[]` or `Array<{ [field]: string }>`; we pass the
+// chunk text on a `text` field and rank on it.
+
+export const DEFAULT_RERANK_MODEL = "bge-reranker-v2-m3";
+
+export interface RerankDocumentInput {
+  /** Stable id used to map the rerank result back to the caller's record. */
+  id: string;
+  /** The chunk text scored by the cross-encoder against the query. */
+  text: string;
+}
+
+export interface RerankHit {
+  id: string;
+  /** Cross-encoder relevance, normalized 0..1 (NOT a cosine score). */
+  score: number;
+}
+
+/** Minimal slice of the Pinecone client used for reranking (injectable in tests). */
+type RerankCapableClient = Pick<Pinecone, "inference">;
+
+/**
+ * Rerank `documents` against `query` with a Pinecone-hosted reranking model.
+ * Returns hits sorted by descending relevance (already capped to `topN`).
+ *
+ * Throws if Pinecone Inference is unavailable/errors — callers are expected to
+ * catch and fall back to their existing ordering (reranking is best-effort).
+ */
+export async function rerankDocuments(input: {
+  apiKey: string;
+  query: string;
+  documents: RerankDocumentInput[];
+  topN?: number;
+  model?: string;
+  client?: RerankCapableClient;
+}): Promise<RerankHit[]> {
+  if (input.documents.length === 0) {
+    return [];
+  }
+
+  const client: RerankCapableClient =
+    input.client ?? new Pinecone({ apiKey: input.apiKey });
+  const model = input.model ?? DEFAULT_RERANK_MODEL;
+  const topN =
+    input.topN !== undefined
+      ? Math.min(Math.max(input.topN, 1), input.documents.length)
+      : undefined;
+
+  const response = await client.inference.rerank({
+    model,
+    query: input.query,
+    documents: input.documents.map((document) => ({ text: document.text })),
+    rankFields: ["text"],
+    returnDocuments: false,
+    ...(topN !== undefined ? { topN } : {}),
+    // bge-reranker-v2-m3 caps each document at ~1,024 tokens; truncate long
+    // tax/financial chunks from the END so the call never errors on length.
+    parameters: { truncate: "END" },
+  });
+
+  return response.data
+    .filter(
+      (ranked) =>
+        Number.isInteger(ranked.index) &&
+        ranked.index >= 0 &&
+        ranked.index < input.documents.length
+    )
+    .map((ranked) => ({
+      id: input.documents[ranked.index].id,
+      score: ranked.score,
+    }));
+}
+
 export function createPineconeVectorStore(input: {
   firmId: string;
   dimension: number;

@@ -1,1 +1,206 @@
-{"level":"warn","event":"chat.local_retrieval_without_query_overlap","time":"2026-06-23T23:25:55.775Z","firmId":"cmmmlw5100001nmq5ktw89kyl","userId":"cmmmlw57g0003nmq53zbmwb0r","threadId":"cmqr9pjdf000gutco3yr4uri6","retrievedCount":1,"mode":"local_retrieval_fallback"}
+[browser] A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+https://react.dev/link/hydration-mismatch
+
+  ...
+    <HotReload globalError={[...]} webSocket={WebSocket} staticIndicatorState={{pathname:null, ...}}>
+      <AppDevOverlayErrorBoundary globalError={[...]}>
+        <ReplaySsrOnlyErrors>
+        <DevRootHTTPAccessFallbackBoundary>
+          <HTTPAccessFallbackBoundary notFound={<NotAllowedRootHTTPFallbackError>}>
+            <HTTPAccessFallbackErrorBoundary pathname="/login" notFound={<NotAllowedRootHTTPFallbackError>} ...>
+              <RedirectBoundary>
+                <RedirectErrorBoundary router={{...}}>
+                  <Head>
+                  <__next_root_layout_boundary__>
+                    <SegmentViewNode type="layout" pagePath="layout.tsx">
+                      <SegmentTrieNode>
+                      <link>
+                      <script>
+                      <script>
+                      <RootLayout>
+                        <html lang="en">
+                          <body
+                            className="geist_a71539c9-module__T19VSG__variable geist_mono_8d43a2aa-module__8Li5zG__var..."
+-                           cz-shortcut-listen="true"
+                          >
+                  ...
+ 
+[browser] A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+https://react.dev/link/hydration-mismatch
+
+  ...
+    <HotReload globalError={[...]} webSocket={WebSocket} staticIndicatorState={{pathname:null, ...}}>
+      <AppDevOverlayErrorBoundary globalError={[...]}>
+        <ReplaySsrOnlyErrors>
+        <DevRootHTTPAccessFallbackBoundary>
+          <HTTPAccessFallbackBoundary notFound={<NotAllowedRootHTTPFallbackError>}>
+            <HTTPAccessFallbackErrorBoundary pathname="/login" notFound={<NotAllowedRootHTTPFallbackError>} ...>
+              <RedirectBoundary>
+                <RedirectErrorBoundary router={{...}}>
+                  <Head>
+                  <__next_root_layout_boundary__>
+                    <SegmentViewNode type="layout" pagePath="layout.tsx">
+                      <SegmentTrieNode>
+                      <link>
+                      <script>
+                      <script>
+                      <RootLayout>
+                        <html lang="en">
+                          <body
+                            className="geist_a71539c9-module__T19VSG__variable geist_mono_8d43a2aa-module__8Li5zG__var..."
+-                           cz-shortcut-listen="true"
+                          >
+                  ...
+ 
+[browser] A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+https://react.dev/link/hydration-mismatch
+
+  ...
+    <HotReload globalError={[...]} webSocket={WebSocket} staticIndicatorState={{pathname:null, ...}}>
+      <AppDevOverlayErrorBoundary globalError={[...]}>
+        <ReplaySsrOnlyErrors>
+        <DevRootHTTPAccessFallbackBoundary>
+          <HTTPAccessFallbackBoundary notFound={<NotAllowedRootHTTPFallbackError>}>
+            <HTTPAccessFallbackErrorBoundary pathname="/login" notFound={<NotAllowedRootHTTPFallbackError>} ...>
+              <RedirectBoundary>
+                <RedirectErrorBoundary router={{...}}>
+                  <Head>
+                  <__next_root_layout_boundary__>
+                    <SegmentViewNode type="layout" pagePath="layout.tsx">
+                      <SegmentTrieNode>
+                      <link>
+                      <script>
+                      <script>
+                      <RootLayout>
+                        <html lang="en">
+                          <body
+                            className="geist_a71539c9-module__T19VSG__variable geist_mono_8d43a2aa-module__8Li5zG__var..."
+-                           cz-shortcut-listen="true"
+                          >
+                  ...
+ 
+{"level":"warn","event":"chat.vector_retrieval_no_supported_matches_fallback","time":"2026-06-27T14:12:43.874Z","firmId":"cmmmlw5100001nmq5ktw89kyl","userId":"cmmmlw5dr0005nmq5adc2so4a","retrievedCount":2,"minScore":0.25,"keepLowScoreVectorMatches":false}
+{"level":"warn","event":"chat.ai_missing_citation_markers","time":"2026-06-27T16:42:55.743Z","firmId":"cmmmlw5100001nmq5ktw89kyl","userId":"cmmmlw5dr0005nmq5adc2so4a","threadId":"cmqwl906r001k12759pjy5y2l","retrievedCount":8}
+{"level":"warn","event":"chat.ai_missing_citation_markers","time":"2026-06-27T16:45:05.482Z","firmId":"cmmmlw5100001nmq5ktw89kyl","userId":"cmmmlw5dr0005nmq5adc2so4a","threadId":"cmqwlbyku003x1275afrd9sf2","retrievedCount":8}
+{"level":"warn","event":"chat.ai_missing_citation_markers","time":"2026-06-27T16:45:18.663Z","firmId":"cmmmlw5100001nmq5ktw89kyl","userId":"cmmmlw5dr0005nmq5adc2so4a","threadId":"cmqwlc9ha004212752gc674xm","retrievedCount":8}
+{"level":"warn","event":"chat.vector_retrieval_no_supported_matches_fallback","time":"2026-06-27T16:46:36.077Z","firmId":"cmmmlw5100001nmq5ktw89kyl","userId":"cmmmlw5dr0005nmq5adc2so4a","retrievedCount":2,"minScore":0.25,"keepLowScoreVectorMatches":false}
+{"level":"warn","event":"chat.ai_missing_citation_markers","time":"2026-06-27T16:46:41.563Z","firmId":"cmmmlw5100001nmq5ktw89kyl","userId":"cmmmlw5dr0005nmq5adc2so4a","threadId":"cmqwle0fp005g12750fbt5ocx","retrievedCount":8}
+{"level":"warn","event":"chat.ai_citation_validation_failed_closed","time":"2026-06-27T16:46:48.881Z","firmId":"cmmmlw5100001nmq5ktw89kyl","userId":"cmmmlw5dr0005nmq5adc2so4a","threadId":"cmqwle0fp005g12750fbt5ocx","retrievedCount":8}
+{"level":"warn","event":"chat.expected_error","time":"2026-06-27T16:46:57.835Z","error":{"name":"Error","message":"[REDACTED]"},"durationMs":21}
+{"level":"warn","event":"chat.expected_error","time":"2026-06-27T16:47:14.489Z","error":{"name":"Error","message":"[REDACTED]"},"durationMs":10}
+AI SDK Warning (openai.responses / gpt-4o-mini): The feature "seed" is not supported.
+AI SDK Warning (openai.responses / gpt-4o-mini): The feature "seed" is not supported.
+AI SDK Warning (openai.responses / gpt-4o-mini): The feature "seed" is not supported.
+AI SDK Warning (openai.responses / gpt-4o-mini): The feature "seed" is not supported.
+AI SDK Warning (openai.responses / gpt-4o-mini): The feature "seed" is not supported.
+AI SDK Warning (openai.responses / gpt-4o-mini): The feature "seed" is not supported.
+AI SDK Warning (openai.responses / gpt-4o-mini): The feature "seed" is not supported.
+AI SDK Warning (openai.responses / gpt-4o-mini): The feature "seed" is not supported.
+AI SDK Warning (openai.responses / gpt-4o-mini): The feature "seed" is not supported.
+AI SDK Warning (openai.responses / gpt-4o-mini): The feature "seed" is not supported.
+AI SDK Warning (openai.responses / gpt-4o-mini): The feature "seed" is not supported.
+AI SDK Warning (openai.responses / gpt-4o-mini): The feature "seed" is not supported.
+AI SDK Warning (openai.responses / gpt-4o-mini): The feature "seed" is not supported.
+AI SDK Warning (openai.responses / gpt-4o-mini): The feature "seed" is not supported.
+AI SDK Warning (openai.responses / gpt-4o-mini): The feature "seed" is not supported.
+AI SDK Warning (openai.responses / gpt-4o-mini): The feature "seed" is not supported.
+AI SDK Warning (openai.responses / gpt-4o-mini): The feature "seed" is not supported.
+AI SDK Warning (openai.responses / gpt-4o-mini): The feature "seed" is not supported.
+AI SDK Warning (openai.responses / gpt-4o-mini): The feature "seed" is not supported.
+AI SDK Warning (openai.responses / gpt-4o-mini): The feature "seed" is not supported.
+AI SDK Warning (openai.responses / gpt-4o-mini): The feature "seed" is not supported.
+AI SDK Warning (openai.responses / gpt-4o-mini): The feature "seed" is not supported.
+AI SDK Warning (openai.responses / gpt-4o-mini): The feature "seed" is not supported.
+AI SDK Warning (openai.responses / gpt-4o-mini): The feature "seed" is not supported.
+AI SDK Warning (openai.responses / gpt-4o-mini): The feature "seed" is not supported.
+AI SDK Warning (openai.responses / gpt-4o-mini): The feature "seed" is not supported.
+AI SDK Warning (openai.responses / gpt-4o-mini): The feature "seed" is not supported.
+AI SDK Warning (openai.responses / gpt-4o-mini): The feature "seed" is not supported.
+AI SDK Warning (openai.responses / gpt-4o-mini): The feature "seed" is not supported.
+AI SDK Warning (openai.responses / gpt-4o-mini): The feature "seed" is not supported.
+AI SDK Warning (openai.responses / gpt-4o-mini): The feature "seed" is not supported.
+{"level":"warn","event":"chat.ai_missing_citation_markers","time":"2026-06-27T17:27:11.855Z","firmId":"cmmmlw5100001nmq5ktw89kyl","userId":"cmmmlw5dr0005nmq5adc2so4a","threadId":"cmqwmu7gs00a312755aggdwcp","retrievedCount":8}
+AI SDK Warning (openai.responses / gpt-4o-mini): The feature "seed" is not supported.
+AI SDK Warning (openai.responses / gpt-4o-mini): The feature "seed" is not supported.
+AI SDK Warning (openai.responses / gpt-4o-mini): The feature "seed" is not supported.
+AI SDK Warning (openai.responses / gpt-4o-mini): The feature "seed" is not supported.
+AI SDK Warning (openai.responses / gpt-4o-mini): The feature "seed" is not supported.
+{"level":"warn","event":"chat.vector_retrieval_no_supported_matches_fallback","time":"2026-06-27T17:27:26.965Z","firmId":"cmmmlw5100001nmq5ktw89kyl","userId":"cmmmlw5dr0005nmq5adc2so4a","retrievedCount":2,"minScore":0.25,"keepLowScoreVectorMatches":false}
+AI SDK Warning (openai.responses / gpt-4o-mini): The feature "seed" is not supported.
+AI SDK Warning (openai.responses / gpt-4o-mini): The feature "seed" is not supported.
+{"level":"warn","event":"chat.expected_error","time":"2026-06-27T17:27:30.416Z","error":{"name":"Error","message":"[REDACTED]"},"durationMs":8}
+AI SDK Warning (openai.responses / gpt-4o-mini): The feature "seed" is not supported.
+{"level":"warn","event":"chat.expected_error","time":"2026-06-27T17:27:35.217Z","error":{"name":"Error","message":"[REDACTED]"},"durationMs":23}
+AI SDK Warning (openai.responses / gpt-4.1-mini): The feature "seed" is not supported.
+AI SDK Warning (openai.responses / gpt-4.1-mini): The feature "seed" is not supported.
+AI SDK Warning (openai.responses / gpt-4.1-mini): The feature "seed" is not supported.
+AI SDK Warning (openai.responses / gpt-4.1-mini): The feature "seed" is not supported.
+AI SDK Warning (openai.responses / gpt-4.1-mini): The feature "seed" is not supported.
+AI SDK Warning (openai.responses / gpt-4.1-mini): The feature "seed" is not supported.
+AI SDK Warning (openai.responses / gpt-4.1-mini): The feature "seed" is not supported.
+AI SDK Warning (openai.responses / gpt-4.1-mini): The feature "seed" is not supported.
+AI SDK Warning (openai.responses / gpt-4.1-mini): The feature "seed" is not supported.
+AI SDK Warning (openai.responses / gpt-4.1-mini): The feature "seed" is not supported.
+AI SDK Warning (openai.responses / gpt-4.1-mini): The feature "seed" is not supported.
+AI SDK Warning (openai.responses / gpt-4.1-mini): The feature "seed" is not supported.
+AI SDK Warning (openai.responses / gpt-4.1-mini): The feature "seed" is not supported.
+AI SDK Warning (openai.responses / gpt-4.1-mini): The feature "seed" is not supported.
+AI SDK Warning (openai.responses / gpt-4.1-mini): The feature "seed" is not supported.
+AI SDK Warning (openai.responses / gpt-4.1-mini): The feature "seed" is not supported.
+AI SDK Warning (openai.responses / gpt-4.1-mini): The feature "seed" is not supported.
+AI SDK Warning (openai.responses / gpt-4.1-mini): The feature "seed" is not supported.
+AI SDK Warning (openai.responses / gpt-4.1-mini): The feature "seed" is not supported.
+AI SDK Warning (openai.responses / gpt-4.1-mini): The feature "seed" is not supported.
+{"level":"warn","event":"chat.ai_missing_citation_markers","time":"2026-06-27T17:29:29.725Z","firmId":"cmmmlw5100001nmq5ktw89kyl","userId":"cmmmlw5dr0005nmq5adc2so4a","threadId":"cmqwmx63l00dw1275f8k4leue","retrievedCount":8}
+AI SDK Warning (openai.responses / gpt-4.1-mini): The feature "seed" is not supported.
+AI SDK Warning (openai.responses / gpt-4.1-mini): The feature "seed" is not supported.
+AI SDK Warning (openai.responses / gpt-4.1-mini): The feature "seed" is not supported.
+AI SDK Warning (openai.responses / gpt-4.1-mini): The feature "seed" is not supported.
+AI SDK Warning (openai.responses / gpt-4.1-mini): The feature "seed" is not supported.
+AI SDK Warning (openai.responses / gpt-4.1-mini): The feature "seed" is not supported.
+AI SDK Warning (openai.responses / gpt-4.1-mini): The feature "seed" is not supported.
+AI SDK Warning (openai.responses / gpt-4.1-mini): The feature "seed" is not supported.
+AI SDK Warning (openai.responses / gpt-4.1-mini): The feature "seed" is not supported.
+AI SDK Warning (openai.responses / gpt-4.1-mini): The feature "seed" is not supported.
+AI SDK Warning (openai.responses / gpt-4.1-mini): The feature "seed" is not supported.
+AI SDK Warning (openai.responses / gpt-4.1-mini): The feature "seed" is not supported.
+AI SDK Warning (openai.responses / gpt-4.1-mini): The feature "seed" is not supported.
+AI SDK Warning (openai.responses / gpt-4.1-mini): The feature "seed" is not supported.
+AI SDK Warning (openai.responses / gpt-4.1-mini): The feature "seed" is not supported.
+{"level":"warn","event":"chat.ai_missing_citation_markers","time":"2026-06-27T17:30:11.754Z","firmId":"cmmmlw5100001nmq5ktw89kyl","userId":"cmmmlw5dr0005nmq5adc2so4a","threadId":"cmqwmy29x00fu1275koc9m7u2","retrievedCount":2}
+AI SDK Warning (openai.responses / gpt-4.1-mini): The feature "seed" is not supported.
+{"level":"warn","event":"chat.ai_citation_validation_failed_closed","time":"2026-06-27T17:30:12.777Z","firmId":"cmmmlw5100001nmq5ktw89kyl","userId":"cmmmlw5dr0005nmq5adc2so4a","threadId":"cmqwmy29x00fu1275koc9m7u2","retrievedCount":2}
+AI SDK Warning (openai.responses / gpt-4.1-mini): The feature "seed" is not supported.
+{"level":"warn","event":"chat.vector_retrieval_no_supported_matches_fallback","time":"2026-06-27T17:30:16.889Z","firmId":"cmmmlw5100001nmq5ktw89kyl","userId":"cmmmlw5dr0005nmq5adc2so4a","retrievedCount":2,"minScore":0.25,"keepLowScoreVectorMatches":false}
+AI SDK Warning (openai.responses / gpt-4.1-mini): The feature "seed" is not supported.
+AI SDK Warning (openai.responses / gpt-4.1-mini): The feature "seed" is not supported.
+{"level":"warn","event":"chat.expected_error","time":"2026-06-27T17:30:22.797Z","error":{"name":"Error","message":"[REDACTED]"},"durationMs":17}
+AI SDK Warning (openai.responses / gpt-4.1-mini): The feature "seed" is not supported.
+{"level":"warn","event":"chat.expected_error","time":"2026-06-27T17:30:29.271Z","error":{"name":"Error","message":"[REDACTED]"},"durationMs":21}

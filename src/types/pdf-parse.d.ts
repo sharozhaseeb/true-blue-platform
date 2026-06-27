@@ -5,9 +5,9 @@ declare module "pdf-parse" {
     /** Number of rendered pages */
     numrender: number;
     /** PDF info */
-    info: Record<string, any>;
+    info: Record<string, unknown>;
     /** PDF metadata */
-    metadata: any;
+    metadata: unknown;
     /** PDF version */
     version: string;
     /** All text content */
@@ -16,7 +16,7 @@ declare module "pdf-parse" {
 
   interface PdfOptions {
     /** First page to parse (1-indexed) */
-    pagerender?: (pageData: any) => Promise<string>;
+    pagerender?: (pageData: unknown) => Promise<string>;
     /** Max number of pages to parse. Use -1 for all pages. */
     max?: number;
     /** PDF.js version */

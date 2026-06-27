@@ -30,9 +30,11 @@ import { TEXTRACT_BASE_DOCUMENT_PARSER_VERSION } from "@/lib/textract-normalizer
 import {
   createPineconeVectorStore,
   getPineconeFirmNamespace,
+  rerankDocuments,
   type PineconeVectorStore,
   type VectorQueryMatch,
 } from "@/lib/vector/pinecone";
+import { logger } from "@/lib/server-logger";
 
 export interface RetrieveVectorDocumentChunksInput {
   firmId: string;
@@ -78,6 +80,12 @@ type VectorRetrievalDb = typeof prisma;
 type VectorMatchWithDocument = VectorQueryMatch & {
   queriedDocumentId?: string;
 };
+
+// Number of reranked candidates fed downstream once reranking is active. The
+// vector layer fetches a wider candidate set (topK ~30) and the cross-encoder
+// reranks it down to these few, highest-precision chunks. Fewer, better chunks
+// beat more chunks for a small model (lost-in-the-middle).
+const RERANK_TOP_N = 6;
 
 const RETRIEVAL_CHUNK_SELECT = {
   id: true,
@@ -422,6 +430,77 @@ function createCoverage(input: {
   };
 }
 
+/**
+ * Reranking stage (Pinecone Inference, free `bge-reranker-v2-m3`).
+ *
+ * Reorders the vector candidate set by cross-encoder relevance to the user's
+ * question and keeps the top {@link RERANK_TOP_N}. This changes ONLY the order
+ * and the cut of `results`: every result object — and therefore its chunkId,
+ * documentId, page, snippet, metadata, citation, and original cosine `score` —
+ * is passed through unchanged.
+ *
+ * Score-gate decision (deliberate): we PRESERVE the original Pinecone cosine
+ * `score` on each result and do NOT overwrite it with the rerank score. The
+ * downstream fail-closed grounding gate (`score >= VECTOR_MIN_SCORE`, default
+ * 0.25) therefore keeps operating on the cosine scale exactly as before — the
+ * cosine threshold is never applied to a rerank score, which lives on a
+ * different 0..1 distribution. We intentionally do NOT add a rerank-score floor:
+ * bge skews relevance scores very low for all-but-the-top matches, so a floor
+ * would over-filter and manufacture false "insufficient evidence". Reranking
+ * thus reorders/cuts the candidate set; the cosine gate remains the sole
+ * evidence gate. Net effect on the grounding contract: identical evidence
+ * semantics, higher-precision ordering, a tighter cut (top-6 vs top-8).
+ *
+ * Fail-open on error: any Inference failure (unavailable, quota, bad request) is
+ * caught and we fall back to the existing vector-score ordering. Reranking must
+ * never fail the request.
+ */
+async function rerankVectorResults(input: {
+  query: string;
+  results: LocalRetrievalResult[];
+  config: M3ProviderConfig;
+  apiKey: string;
+  warnings: string[];
+}): Promise<LocalRetrievalResult[]> {
+  if (!input.config.rerankEnabled || input.results.length <= 1) {
+    return input.results;
+  }
+
+  try {
+    const hits = await rerankDocuments({
+      apiKey: input.apiKey,
+      query: input.query,
+      model: input.config.rerankModel,
+      topN: RERANK_TOP_N,
+      documents: input.results.map((result) => ({
+        id: result.chunk.chunkId,
+        text: result.snippetFull ?? result.chunk.content,
+      })),
+    });
+
+    if (hits.length === 0) {
+      return input.results;
+    }
+
+    const resultByChunkId = new Map(
+      input.results.map((result) => [result.chunk.chunkId, result])
+    );
+    const reordered = hits
+      .map((hit) => resultByChunkId.get(hit.id))
+      .filter((result): result is LocalRetrievalResult => result !== undefined);
+
+    return reordered.length > 0 ? reordered : input.results;
+  } catch (error) {
+    input.warnings.push("rerank stage unavailable; used vector-score order");
+    logger.warn("vector_retrieval.rerank_failed_fallback", {
+      error: error instanceof Error ? error.message : String(error),
+      candidateCount: input.results.length,
+      model: input.config.rerankModel,
+    });
+    return input.results;
+  }
+}
+
 export async function retrieveVectorDocumentChunks(
   input: RetrieveVectorDocumentChunksInput,
   db: VectorRetrievalDb = prisma
@@ -572,14 +651,27 @@ export async function retrieveVectorDocumentChunks(
     ];
   });
 
-  return {
+  // Rerank stage: reorder the vector candidates by cross-encoder relevance and
+  // cut to the top-N. Order and cut only — cosine scores and all metadata are
+  // preserved (see rerankVectorResults). Citations and coverage are derived
+  // from the reranked set so "Used"/"No evidence" reflect what actually fed the
+  // answer. Falls back to vector-score order on any rerank failure.
+  const rankedResults = await rerankVectorResults({
+    query: input.query,
     results,
-    citations: results.map(createCitation),
+    config,
+    apiKey: pineconeConfig.apiKey,
+    warnings,
+  });
+
+  return {
+    results: rankedResults,
+    citations: rankedResults.map(createCitation),
     warnings,
     coverage: createCoverage({
       selectedDocumentIds: documentIds,
       vectorMatches,
-      results,
+      results: rankedResults,
       scoreThreshold: config.vectorMinScore,
     }),
   };

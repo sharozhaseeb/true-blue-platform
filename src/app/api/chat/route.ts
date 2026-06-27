@@ -559,6 +559,75 @@ function selectFinalMultiDocumentResults(input: {
   };
 }
 
+// Only sub-split a single sentence/line when it is unusually long, so a whole
+// sentence (and any "Label: value" or "[S1]" marker inside it) is replayed as
+// one delta in the common case.
+const REPLAY_LONG_SEGMENT_CHARS = 180;
+
+/**
+ * Split an already-validated answer into ordered chunks for progressive
+ * "streaming" replay. This never alters content — `chunks.join("") === answer`.
+ *
+ * Boundaries are chosen so markdown and grounding stay intact: fenced code
+ * blocks are kept atomic; otherwise we break on sentence terminators and line
+ * breaks (whole sentences/lines stay together), and only sub-split an
+ * over-long segment on whitespace runs (never mid-word, never inside a `[S1]`
+ * citation marker). Trailing whitespace stays attached to the preceding token
+ * so concatenation reproduces the original text exactly.
+ */
+function chunkForReplay(answer: string): string[] {
+  if (answer.length === 0) {
+    return [];
+  }
+
+  const chunks: string[] = [];
+  const flushSegment = (segment: string): void => {
+    if (segment.length === 0) {
+      return;
+    }
+    if (segment.length <= REPLAY_LONG_SEGMENT_CHARS) {
+      chunks.push(segment);
+      return;
+    }
+
+    // Over-long segment: group whole words up to the budget without splitting
+    // words or citation markers.
+    const tokens = segment.match(/\S+\s*|\s+/g) ?? [segment];
+    let current = "";
+    for (const token of tokens) {
+      if (
+        current.length > 0 &&
+        current.length + token.length > REPLAY_LONG_SEGMENT_CHARS
+      ) {
+        chunks.push(current);
+        current = "";
+      }
+      current += token;
+    }
+    if (current.length > 0) {
+      chunks.push(current);
+    }
+  };
+
+  // Segment into fenced code blocks (atomic) and prose runs.
+  const segments = answer.split(/(```[\s\S]*?```)/g).filter((part) => part.length > 0);
+  for (const segment of segments) {
+    if (segment.startsWith("```") && segment.endsWith("```")) {
+      chunks.push(segment);
+      continue;
+    }
+
+    // Break prose on sentence terminators and line breaks, keeping the
+    // delimiter (and trailing whitespace) attached to the preceding text.
+    const pieces = segment.match(/[\s\S]*?(?:[.!?]+(?=\s|$)|\n|$)\s*/g) ?? [segment];
+    for (const piece of pieces) {
+      flushSegment(piece);
+    }
+  }
+
+  return chunks.filter((chunk) => chunk.length > 0);
+}
+
 function buildCitationRepairPrompt(input: {
   question: string;
   context: string;
@@ -987,11 +1056,16 @@ function streamPersistedText(input: {
         type: "text-start",
         id: textId,
       });
-      writer.write({
-        type: "text-delta",
-        id: textId,
-        delta: publicOutput.answer,
-      });
+      // Chunk-replay the already-validated answer so the client renders it
+      // progressively. Only validated content is ever emitted — the entire
+      // grounding/validation pipeline ran before this point.
+      for (const delta of chunkForReplay(publicOutput.answer)) {
+        writer.write({
+          type: "text-delta",
+          id: textId,
+          delta,
+        });
+      }
       writer.write({
         type: "text-end",
         id: textId,
@@ -1073,6 +1147,8 @@ async function streamAiChatResponse(input: {
     system: M3_RAG_SYSTEM_PROMPT,
     messages,
     maxOutputTokens,
+    temperature: 0,
+    seed: 7,
   });
 
   let finalOutput = finalizePublicChatOutput(result.text.trim(), input.citations);
@@ -1104,6 +1180,8 @@ async function streamAiChatResponse(input: {
           draftAnswer: finalOutput.answer || result.text,
         }),
         maxOutputTokens,
+        temperature: 0,
+        seed: 7,
       });
       repairUsage = repair.usage;
       finalOutput = finalizePublicChatOutput(repair.text.trim(), input.citations);

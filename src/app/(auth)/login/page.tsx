@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
+import { BRAND } from "@/lib/brand";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -57,7 +58,7 @@ export default function LoginPage() {
           Welcome back
         </h1>
         <p className="mt-2 text-sm text-gray-500">
-          Sign in to your True Blue account
+          Sign in to your {BRAND.name} account
         </p>
       </div>
 
@@ -91,20 +92,12 @@ export default function LoginPage() {
           </div>
 
           <div>
-            <div className="flex items-center justify-between mb-2">
-              <label
-                htmlFor="password"
-                className="block text-xs font-semibold text-gray-500 uppercase tracking-wide"
-              >
-                Password
-              </label>
-              <button
-                type="button"
-                className="text-xs font-medium text-blue-600 hover:text-blue-500 transition-colors"
-              >
-                Forgot?
-              </button>
-            </div>
+            <label
+              htmlFor="password"
+              className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2"
+            >
+              Password
+            </label>
             <input
               id="password"
               type="password"

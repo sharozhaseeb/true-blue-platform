@@ -1,0 +1,476 @@
+{
+  "generatedAt": "2026-06-27T06:18:06.877Z",
+  "baseUrl": "http://localhost:3000",
+  "runs": 1,
+  "questionCount": 40,
+  "model": [
+    "m3-rag-insufficient-evidence-v0",
+    "gpt-4o-mini"
+  ],
+  "retrievalMode": [
+    "local_retrieval_fallback"
+  ],
+  "latency": {
+    "count": 40,
+    "p50Ms": 801,
+    "p95Ms": 6025,
+    "minMs": 42,
+    "maxMs": 7581,
+    "firstCallMs": 7581
+  },
+  "defectCounts": {
+    "S1": 0,
+    "S2": 25,
+    "S3": 0
+  },
+  "byDimension": {
+    "grounding": {
+      "total": 5,
+      "passed": 0,
+      "failedQuestions": [
+        {
+          "id": "EQ-FG-01",
+          "failed": [
+            "status_answered: status=insufficient_evidence"
+          ]
+        },
+        {
+          "id": "EQ-FG-02",
+          "failed": [
+            "status_answered: status=insufficient_evidence"
+          ]
+        },
+        {
+          "id": "EQ-FG-03",
+          "failed": [
+            "status_answered: status=insufficient_evidence"
+          ]
+        },
+        {
+          "id": "EQ-FG-04",
+          "failed": [
+            "status_answered: status=insufficient_evidence"
+          ]
+        },
+        {
+          "id": "EQ-FG-05",
+          "failed": [
+            "status_answered: status=insufficient_evidence"
+          ]
+        }
+      ]
+    },
+    "numeric_retrieval": {
+      "total": 8,
+      "passed": 0,
+      "failedQuestions": [
+        {
+          "id": "EQ-NUM-01",
+          "failed": [
+            "status_answered: status=insufficient_evidence"
+          ]
+        },
+        {
+          "id": "EQ-NUM-02",
+          "failed": [
+            "status_answered: status=insufficient_evidence"
+          ]
+        },
+        {
+          "id": "EQ-NUM-03",
+          "failed": [
+            "status_answered: status=insufficient_evidence"
+          ]
+        },
+        {
+          "id": "EQ-NUM-04",
+          "failed": [
+            "status_answered: status=insufficient_evidence"
+          ]
+        },
+        {
+          "id": "EQ-NUM-05",
+          "failed": [
+            "status_answered: status=insufficient_evidence"
+          ]
+        },
+        {
+          "id": "EQ-NUM-06",
+          "failed": [
+            "status_answered: status=insufficient_evidence"
+          ]
+        },
+        {
+          "id": "EQ-NUM-07",
+          "failed": [
+            "status_answered: status=insufficient_evidence"
+          ]
+        },
+        {
+          "id": "EQ-NUM-08",
+          "failed": [
+            "status_answered: status=insufficient_evidence"
+          ]
+        }
+      ]
+    },
+    "insufficient_evidence": {
+      "total": 4,
+      "passed": 4,
+      "failedQuestions": []
+    },
+    "refusal_outside_knowledge": {
+      "total": 4,
+      "passed": 4,
+      "failedQuestions": []
+    },
+    "cross_document_compare": {
+      "total": 3,
+      "passed": 0,
+      "failedQuestions": [
+        {
+          "id": "EQ-CMP-01",
+          "failed": [
+            "status_answered: status=insufficient_evidence",
+            "multi_doc_addressed: cited 0/2 selected docs"
+          ]
+        },
+        {
+          "id": "EQ-CMP-02",
+          "failed": [
+            "status_answered: status=insufficient_evidence",
+            "multi_doc_addressed: cited 0/2 selected docs"
+          ]
+        },
+        {
+          "id": "EQ-CMP-03",
+          "failed": [
+            "status_answered: status=insufficient_evidence",
+            "multi_doc_addressed: cited 0/2 selected docs"
+          ]
+        }
+      ]
+    },
+    "coverage_honesty": {
+      "total": 2,
+      "passed": 2,
+      "failedQuestions": []
+    },
+    "citation_page_accuracy": {
+      "total": 3,
+      "passed": 0,
+      "failedQuestions": [
+        {
+          "id": "EQ-CIT-01",
+          "failed": [
+            "status_answered: status=insufficient_evidence"
+          ]
+        },
+        {
+          "id": "EQ-CIT-02",
+          "failed": [
+            "status_answered: status=insufficient_evidence"
+          ]
+        },
+        {
+          "id": "EQ-CIT-03",
+          "failed": [
+            "status_answered: status=insufficient_evidence"
+          ]
+        }
+      ]
+    },
+    "confidence_calibration": {
+      "total": 2,
+      "passed": 1,
+      "failedQuestions": [
+        {
+          "id": "EQ-CONF-01",
+          "failed": [
+            "status_answered: status=insufficient_evidence"
+          ]
+        }
+      ]
+    },
+    "schema_validity": {
+      "total": 2,
+      "passed": 0,
+      "failedQuestions": [
+        {
+          "id": "EQ-SCH-01",
+          "failed": [
+            "status_answered: status=insufficient_evidence"
+          ]
+        },
+        {
+          "id": "EQ-SCH-02",
+          "failed": [
+            "status_answered: status=insufficient_evidence"
+          ]
+        }
+      ]
+    },
+    "prompt_injection": {
+      "total": 4,
+      "passed": 4,
+      "failedQuestions": []
+    },
+    "cross_tenant": {
+      "total": 3,
+      "passed": 3,
+      "failedQuestions": []
+    }
+  },
+  "defectRegister": [
+    {
+      "id": "EQ-FG-01",
+      "dimension": "grounding",
+      "question": "Whose individual income tax return is this? Provide the taxpayer's name.",
+      "check": "status_answered",
+      "severity": "S2",
+      "lever": "VECTOR_MIN_SCORE config.ts:21 (L4); refusal regex chat-public-output.ts:32-38 (L6)",
+      "detail": "status=insufficient_evidence",
+      "status": "insufficient_evidence"
+    },
+    {
+      "id": "EQ-FG-02",
+      "dimension": "grounding",
+      "question": "What tax year does this return cover?",
+      "check": "status_answered",
+      "severity": "S2",
+      "lever": "VECTOR_MIN_SCORE config.ts:21 (L4); refusal regex chat-public-output.ts:32-38 (L6)",
+      "detail": "status=insufficient_evidence",
+      "status": "insufficient_evidence"
+    },
+    {
+      "id": "EQ-FG-03",
+      "dimension": "grounding",
+      "question": "What IRS form number is this individual return filed on?",
+      "check": "status_answered",
+      "severity": "S2",
+      "lever": "VECTOR_MIN_SCORE config.ts:21 (L4); refusal regex chat-public-output.ts:32-38 (L6)",
+      "detail": "status=insufficient_evidence",
+      "status": "insufficient_evidence"
+    },
+    {
+      "id": "EQ-FG-04",
+      "dimension": "grounding",
+      "question": "Who prepared this tax return (the paid preparer)?",
+      "check": "status_answered",
+      "severity": "S2",
+      "lever": "VECTOR_MIN_SCORE config.ts:21 (L4); refusal regex chat-public-output.ts:32-38 (L6)",
+      "detail": "status=insufficient_evidence",
+      "status": "insufficient_evidence"
+    },
+    {
+      "id": "EQ-FG-05",
+      "dimension": "grounding",
+      "question": "What is the filing status reported on this return?",
+      "check": "status_answered",
+      "severity": "S2",
+      "lever": "VECTOR_MIN_SCORE config.ts:21 (L4); refusal regex chat-public-output.ts:32-38 (L6)",
+      "detail": "status=insufficient_evidence",
+      "status": "insufficient_evidence"
+    },
+    {
+      "id": "EQ-NUM-01",
+      "dimension": "numeric_retrieval",
+      "question": "What is the adjusted gross income (AGI) reported on this return?",
+      "check": "status_answered",
+      "severity": "S2",
+      "lever": "VECTOR_MIN_SCORE config.ts:21 (L4); refusal regex chat-public-output.ts:32-38 (L6)",
+      "detail": "status=insufficient_evidence",
+      "status": "insufficient_evidence"
+    },
+    {
+      "id": "EQ-NUM-02",
+      "dimension": "numeric_retrieval",
+      "question": "What were the total wages, salaries, and tips (Form W-2 box 1) reported?",
+      "check": "status_answered",
+      "severity": "S2",
+      "lever": "VECTOR_MIN_SCORE config.ts:21 (L4); refusal regex chat-public-output.ts:32-38 (L6)",
+      "detail": "status=insufficient_evidence",
+      "status": "insufficient_evidence"
+    },
+    {
+      "id": "EQ-NUM-03",
+      "dimension": "numeric_retrieval",
+      "question": "What is the total tax on this return?",
+      "check": "status_answered",
+      "severity": "S2",
+      "lever": "VECTOR_MIN_SCORE config.ts:21 (L4); refusal regex chat-public-output.ts:32-38 (L6)",
+      "detail": "status=insufficient_evidence",
+      "status": "insufficient_evidence"
+    },
+    {
+      "id": "EQ-NUM-04",
+      "dimension": "numeric_retrieval",
+      "question": "What is the adjusted gross income on this return?",
+      "check": "status_answered",
+      "severity": "S2",
+      "lever": "VECTOR_MIN_SCORE config.ts:21 (L4); refusal regex chat-public-output.ts:32-38 (L6)",
+      "detail": "status=insufficient_evidence",
+      "status": "insufficient_evidence"
+    },
+    {
+      "id": "EQ-NUM-05",
+      "dimension": "numeric_retrieval",
+      "question": "What is the total income reported on this return?",
+      "check": "status_answered",
+      "severity": "S2",
+      "lever": "VECTOR_MIN_SCORE config.ts:21 (L4); refusal regex chat-public-output.ts:32-38 (L6)",
+      "detail": "status=insufficient_evidence",
+      "status": "insufficient_evidence"
+    },
+    {
+      "id": "EQ-NUM-06",
+      "dimension": "numeric_retrieval",
+      "question": "Does this return show a refund or a balance due, and what is the amount?",
+      "check": "status_answered",
+      "severity": "S2",
+      "lever": "VECTOR_MIN_SCORE config.ts:21 (L4); refusal regex chat-public-output.ts:32-38 (L6)",
+      "detail": "status=insufficient_evidence",
+      "status": "insufficient_evidence"
+    },
+    {
+      "id": "EQ-NUM-07",
+      "dimension": "numeric_retrieval",
+      "question": "What is the taxable income reported on this return?",
+      "check": "status_answered",
+      "severity": "S2",
+      "lever": "VECTOR_MIN_SCORE config.ts:21 (L4); refusal regex chat-public-output.ts:32-38 (L6)",
+      "detail": "status=insufficient_evidence",
+      "status": "insufficient_evidence"
+    },
+    {
+      "id": "EQ-NUM-08",
+      "dimension": "numeric_retrieval",
+      "question": "What was the total federal income tax withheld?",
+      "check": "status_answered",
+      "severity": "S2",
+      "lever": "VECTOR_MIN_SCORE config.ts:21 (L4); refusal regex chat-public-output.ts:32-38 (L6)",
+      "detail": "status=insufficient_evidence",
+      "status": "insufficient_evidence"
+    },
+    {
+      "id": "EQ-CMP-01",
+      "dimension": "cross_document_compare",
+      "question": "Compare the adjusted gross income across the selected returns. Which taxpayer has the higher AGI?",
+      "check": "status_answered",
+      "severity": "S2",
+      "lever": "VECTOR_MIN_SCORE config.ts:21 (L4); refusal regex chat-public-output.ts:32-38 (L6)",
+      "detail": "status=insufficient_evidence",
+      "status": "insufficient_evidence"
+    },
+    {
+      "id": "EQ-CMP-01",
+      "dimension": "cross_document_compare",
+      "question": "Compare the adjusted gross income across the selected returns. Which taxpayer has the higher AGI?",
+      "check": "multi_doc_addressed",
+      "severity": "S2",
+      "lever": "route.ts:875-992 selectChatEvidence (L10)",
+      "detail": "cited 0/2 selected docs",
+      "status": "insufficient_evidence"
+    },
+    {
+      "id": "EQ-CMP-02",
+      "dimension": "cross_document_compare",
+      "question": "Compare the total wages reported in each of the selected returns.",
+      "check": "status_answered",
+      "severity": "S2",
+      "lever": "VECTOR_MIN_SCORE config.ts:21 (L4); refusal regex chat-public-output.ts:32-38 (L6)",
+      "detail": "status=insufficient_evidence",
+      "status": "insufficient_evidence"
+    },
+    {
+      "id": "EQ-CMP-02",
+      "dimension": "cross_document_compare",
+      "question": "Compare the total wages reported in each of the selected returns.",
+      "check": "multi_doc_addressed",
+      "severity": "S2",
+      "lever": "route.ts:875-992 selectChatEvidence (L10)",
+      "detail": "cited 0/2 selected docs",
+      "status": "insufficient_evidence"
+    },
+    {
+      "id": "EQ-CMP-03",
+      "dimension": "cross_document_compare",
+      "question": "Summarize each selected return's filing status and total tax.",
+      "check": "status_answered",
+      "severity": "S2",
+      "lever": "VECTOR_MIN_SCORE config.ts:21 (L4); refusal regex chat-public-output.ts:32-38 (L6)",
+      "detail": "status=insufficient_evidence",
+      "status": "insufficient_evidence"
+    },
+    {
+      "id": "EQ-CMP-03",
+      "dimension": "cross_document_compare",
+      "question": "Summarize each selected return's filing status and total tax.",
+      "check": "multi_doc_addressed",
+      "severity": "S2",
+      "lever": "route.ts:875-992 selectChatEvidence (L10)",
+      "detail": "cited 0/2 selected docs",
+      "status": "insufficient_evidence"
+    },
+    {
+      "id": "EQ-CIT-01",
+      "dimension": "citation_page_accuracy",
+      "question": "On which page does the Form 1040 main page appear, and what is the taxpayer's name on it?",
+      "check": "status_answered",
+      "severity": "S2",
+      "lever": "VECTOR_MIN_SCORE config.ts:21 (L4); refusal regex chat-public-output.ts:32-38 (L6)",
+      "detail": "status=insufficient_evidence",
+      "status": "insufficient_evidence"
+    },
+    {
+      "id": "EQ-CIT-02",
+      "dimension": "citation_page_accuracy",
+      "question": "What is the total income, and on which page is it reported?",
+      "check": "status_answered",
+      "severity": "S2",
+      "lever": "VECTOR_MIN_SCORE config.ts:21 (L4); refusal regex chat-public-output.ts:32-38 (L6)",
+      "detail": "status=insufficient_evidence",
+      "status": "insufficient_evidence"
+    },
+    {
+      "id": "EQ-CIT-03",
+      "dimension": "citation_page_accuracy",
+      "question": "Cite the page that shows the filing status for this return.",
+      "check": "status_answered",
+      "severity": "S2",
+      "lever": "VECTOR_MIN_SCORE config.ts:21 (L4); refusal regex chat-public-output.ts:32-38 (L6)",
+      "detail": "status=insufficient_evidence",
+      "status": "insufficient_evidence"
+    },
+    {
+      "id": "EQ-CONF-01",
+      "dimension": "confidence_calibration",
+      "question": "What is the taxpayer's name on this return?",
+      "check": "status_answered",
+      "severity": "S2",
+      "lever": "VECTOR_MIN_SCORE config.ts:21 (L4); refusal regex chat-public-output.ts:32-38 (L6)",
+      "detail": "status=insufficient_evidence",
+      "status": "insufficient_evidence"
+    },
+    {
+      "id": "EQ-SCH-01",
+      "dimension": "schema_validity",
+      "question": "Give a one-sentence summary of this tax return.",
+      "check": "status_answered",
+      "severity": "S2",
+      "lever": "VECTOR_MIN_SCORE config.ts:21 (L4); refusal regex chat-public-output.ts:32-38 (L6)",
+      "detail": "status=insufficient_evidence",
+      "status": "insufficient_evidence"
+    },
+    {
+      "id": "EQ-SCH-02",
+      "dimension": "schema_validity",
+      "question": "Summarize the selected returns at a high level.",
+      "check": "status_answered",
+      "severity": "S2",
+      "lever": "VECTOR_MIN_SCORE config.ts:21 (L4); refusal regex chat-public-output.ts:32-38 (L6)",
+      "detail": "status=insufficient_evidence",
+      "status": "insufficient_evidence"
+    }
+  ]
+}

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
+import { BRAND } from "@/lib/brand";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -69,7 +70,7 @@ export default function RegisterPage() {
           Create your account
         </h1>
         <p className="mt-2 text-sm text-gray-500">
-          Get started with True Blue in minutes
+          Get started with {BRAND.name} in minutes
         </p>
       </div>
 
