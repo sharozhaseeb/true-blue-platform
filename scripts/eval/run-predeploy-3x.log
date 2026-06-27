@@ -1,0 +1,21 @@
+Logged in as user@acmetax.com (firm Acme Tax Services)
+Loaded pageCount for 28 Acme documents
+[1/120] EQ-FG-01 status=answered conf=high src=1 9885ms ok
+[2/120] EQ-FG-02 status=answered conf=high src=1 5605ms ok
+[3/120] EQ-FG-03 status=answered conf=high src=1 3690ms ok
+[4/120] EQ-FG-04 status=insufficient_evidence conf=none src=0 2899ms FAIL:status_answered
+[5/120] EQ-FG-05 status=answered conf=high src=1 3141ms ok
+[6/120] EQ-NUM-01 status=answered conf=high src=1 3815ms ok
+[7/120] EQ-NUM-02 status=answered conf=high src=1 4615ms ok
+[8/120] EQ-NUM-03 status=insufficient_evidence conf=none src=0 4216ms FAIL:status_answered
+[9/120] EQ-NUM-04 status=answered conf=high src=1 3233ms ok
+[10/120] EQ-NUM-05 status=answered conf=high src=1 4018ms ok
+[11/120] EQ-NUM-06 status=answered conf=high src=1 3071ms ok
+[12/120] EQ-NUM-07 status=insufficient_evidence conf=none src=0 3022ms FAIL:status_answered
+[13/120] EQ-NUM-08 status=answered conf=high src=1 2785ms ok
+[14/120] EQ-INS-01 status=insufficient_evidence conf=none src=0 3078ms ok
+[15/120] EQ-INS-02 status=insufficient_evidence conf=none src=0 2849ms ok
+[16/120] EQ-INS-03 status=insufficient_evidence conf=none src=0 2984ms ok
+[17/120] EQ-INS-04 status=insufficient_evidence conf=none src=0 4050ms ok
+[18/120] EQ-OUT-01 status=insufficient_evidence conf=none src=0 4237ms ok
+[19/120] EQ-OUT-02 status=insufficient_evidence conf=none src=0 4283ms ok

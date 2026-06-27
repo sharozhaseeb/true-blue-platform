@@ -315,6 +315,8 @@ These are stated plainly so acceptance is honest. They define the boundary betwe
 7. **PII redaction is not yet implemented, and numeric field-mapping is pending SME certification.**
    - The chat can echo identifier PII (SSN, bank/routing/account numbers, email, phone) verbatim from a source document. There is no output-layer masking yet. This is the primary reason to use **redacted/non-sensitive samples only** until a redaction pass ships.
    - The system enforces that answers are **grounded** and tied to a **real page** of a real document, and it strips unsupported numbers. It does **not** yet certify that a given figure maps to the **intended tax line** (e.g. that "9,649" is the *total tax* line). Numeric **field-mapping correctness** requires subject-matter-expert (SME) certification, which is pending.
+8. **Response time — expect a few seconds per answer.** Each response is retrieved, re-ranked for relevance, and grounded before it is returned, so answers typically take **a few seconds** (up to ~10–15s for complex multi-document questions, or for the first request after an idle period). This is expected behaviour, not an error.
+9. **Relevance re-ranking runs on a shared service tier.** Retrieved evidence is re-ranked for relevance before answering. Under heavy **simultaneous** testing this may slow responses or briefly fall back to standard retrieval ordering — the system **degrades gracefully and does not fail**. For the cleanest, most comparable results, have testers run **sequentially** where practical.
 
 Additional product notes (consistent with prior milestones):
 
