@@ -17,3 +17,58 @@ AI SDK Warning (openai.responses / gpt-4o-mini): The feature "seed" is not suppo
 AI SDK Warning (openai.responses / gpt-4o-mini): The feature "seed" is not supported.
 AI SDK Warning (openai.responses / gpt-4o-mini): The feature "seed" is not supported.
 AI SDK Warning (openai.responses / gpt-4o-mini): The feature "seed" is not supported.
+AI SDK Warning (openai.responses / gpt-4o-mini): The feature "seed" is not supported.
+AI SDK Warning (openai.responses / gpt-4o-mini): The feature "seed" is not supported.
+AI SDK Warning (openai.responses / gpt-4o-mini): The feature "seed" is not supported.
+AI SDK Warning (openai.responses / gpt-4o-mini): The feature "seed" is not supported.
+AI SDK Warning (openai.responses / gpt-4o-mini): The feature "seed" is not supported.
+AI SDK Warning (openai.responses / gpt-4o-mini): The feature "seed" is not supported.
+AI SDK Warning (openai.responses / gpt-4o-mini): The feature "seed" is not supported.
+{"level":"warn","event":"chat.ai_missing_citation_markers","time":"2026-06-27T19:51:19.240Z","firmId":"cmmmlw5100001nmq5ktw89kyl","userId":"cmmmlw5dr0005nmq5adc2so4a","threadId":"cmqwrzhcl003kke09lz2uvy64","retrievedCount":8}
+AI SDK Warning (openai.responses / gpt-4o-mini): The feature "seed" is not supported.
+AI SDK Warning (openai.responses / gpt-4o-mini): The feature "seed" is not supported.
+AI SDK Warning (openai.responses / gpt-4o-mini): The feature "seed" is not supported.
+AI SDK Warning (openai.responses / gpt-4o-mini): The feature "seed" is not supported.
+AI SDK Warning (openai.responses / gpt-4o-mini): The feature "seed" is not supported.
+AI SDK Warning (openai.responses / gpt-4o-mini): The feature "seed" is not supported.
+{"level":"warn","event":"chat.ai_missing_citation_markers","time":"2026-06-27T19:51:48.214Z","firmId":"cmmmlw5100001nmq5ktw89kyl","userId":"cmmmlw5dr0005nmq5adc2so4a","threadId":"cmqws05tx0049ke0927uyow9r","retrievedCount":6}
+AI SDK Warning (openai.responses / gpt-4o-mini): The feature "seed" is not supported.
+AI SDK Warning (openai.responses / gpt-4o-mini): The feature "seed" is not supported.
+AI SDK Warning (openai.responses / gpt-4o-mini): The feature "seed" is not supported.
+AI SDK Warning (openai.responses / gpt-4o-mini): The feature "seed" is not supported.
+AI SDK Warning (openai.responses / gpt-4o-mini): The feature "seed" is not supported.
+{"level":"warn","event":"chat.vector_retrieval_no_supported_matches_fallback","time":"2026-06-27T19:52:13.623Z","firmId":"cmmmlw5100001nmq5ktw89kyl","userId":"cmmmlw5dr0005nmq5adc2so4a","retrievedCount":2,"minScore":0.25,"keepLowScoreVectorMatches":false}
+AI SDK Warning (openai.responses / gpt-4o-mini): The feature "seed" is not supported.
+AI SDK Warning (openai.responses / gpt-4o-mini): The feature "seed" is not supported.
+{"level":"warn","event":"chat.expected_error","time":"2026-06-27T19:52:21.808Z","error":{"name":"Error","message":"[REDACTED]"},"durationMs":16}
+AI SDK Warning (openai.responses / gpt-4o-mini): The feature "seed" is not supported.
+{"level":"warn","event":"chat.expected_error","time":"2026-06-27T19:52:30.732Z","error":{"name":"Error","message":"[REDACTED]"},"durationMs":10}
+AI SDK Warning (openai.responses / gpt-4o-mini): The feature "seed" is not supported.
+AI SDK Warning (openai.responses / gpt-4o-mini): The feature "seed" is not supported.
+AI SDK Warning (openai.responses / gpt-4o-mini): The feature "seed" is not supported.
+AI SDK Warning (openai.responses / gpt-4o-mini): The feature "seed" is not supported.
+AI SDK Warning (openai.responses / gpt-4o-mini): The feature "seed" is not supported.
+AI SDK Warning (openai.responses / gpt-4o-mini): The feature "seed" is not supported.
+AI SDK Warning (openai.responses / gpt-4o-mini): The feature "seed" is not supported.
+AI SDK Warning (openai.responses / gpt-4o-mini): The feature "seed" is not supported.
+AI SDK Warning (openai.responses / gpt-4o-mini): The feature "seed" is not supported.
+AI SDK Warning (openai.responses / gpt-4o-mini): The feature "seed" is not supported.
+AI SDK Warning (openai.responses / gpt-4o-mini): The feature "seed" is not supported.
+AI SDK Warning (openai.responses / gpt-4o-mini): The feature "seed" is not supported.
+{"level":"warn","event":"chat.ai_missing_citation_markers","time":"2026-06-27T19:53:09.961Z","firmId":"cmmmlw5100001nmq5ktw89kyl","userId":"cmmmlw5dr0005nmq5adc2so4a","threadId":"cmqws1wk6006wke09bl3ocf2e","retrievedCount":6}
+AI SDK Warning (openai.responses / gpt-4o-mini): The feature "seed" is not supported.
+AI SDK Warning (openai.responses / gpt-4o-mini): The feature "seed" is not supported.
+AI SDK Warning (openai.responses / gpt-4o-mini): The feature "seed" is not supported.
+AI SDK Warning (openai.responses / gpt-4o-mini): The feature "seed" is not supported.
+AI SDK Warning (openai.responses / gpt-4o-mini): The feature "seed" is not supported.
+AI SDK Warning (openai.responses / gpt-4o-mini): The feature "seed" is not supported.
+AI SDK Warning (openai.responses / gpt-4o-mini): The feature "seed" is not supported.
+AI SDK Warning (openai.responses / gpt-4o-mini): The feature "seed" is not supported.
+AI SDK Warning (openai.responses / gpt-4o-mini): The feature "seed" is not supported.
+AI SDK Warning (openai.responses / gpt-4o-mini): The feature "seed" is not supported.
+AI SDK Warning (openai.responses / gpt-4o-mini): The feature "seed" is not supported.
+AI SDK Warning (openai.responses / gpt-4o-mini): The feature "seed" is not supported.
+AI SDK Warning (openai.responses / gpt-4o-mini): The feature "seed" is not supported.
+AI SDK Warning (openai.responses / gpt-4o-mini): The feature "seed" is not supported.
+AI SDK Warning (openai.responses / gpt-4o-mini): The feature "seed" is not supported.
+AI SDK Warning (openai.responses / gpt-4o-mini): The feature "seed" is not supported.

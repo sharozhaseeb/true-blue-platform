@@ -84,8 +84,11 @@ type VectorMatchWithDocument = VectorQueryMatch & {
 // Number of reranked candidates fed downstream once reranking is active. The
 // vector layer fetches a wider candidate set (topK ~30) and the cross-encoder
 // reranks it down to these few, highest-precision chunks. Fewer, better chunks
-// beat more chunks for a small model (lost-in-the-middle).
-const RERANK_TOP_N = 6;
+// beat more chunks for a small model (lost-in-the-middle). Set to 8 (was 6):
+// at 6 the reranker occasionally dropped a correct low-cosine field chunk (e.g.
+// paid-preparer name) below the cut, causing a fail-closed false "insufficient
+// evidence"; 8 preserves that recall while staying focused.
+const RERANK_TOP_N = 8;
 
 const RETRIEVAL_CHUNK_SELECT = {
   id: true,
