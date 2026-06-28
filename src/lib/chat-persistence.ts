@@ -26,12 +26,15 @@ export type ChatUiMessage = {
   content: string;
 };
 
+export type ChatRetrievalModeV1 = "local_retrieval_fallback" | "vector_retrieval";
+
 export type EvidenceCoverageV1 = {
   version: 1;
   selectedDocumentIds: string[];
   retrievedByDocumentId: Record<string, number>;
   finalByDocumentId: Record<string, number>;
   noEvidenceDocumentIds: string[];
+  mode?: ChatRetrievalModeV1;
 };
 
 export type PersistedChatMessage = {
@@ -91,6 +94,7 @@ export interface AppendAssistantMessageInput {
   retrievedChunkIds: string[];
   citations: BaseDocumentCitation[];
   evidenceCoverage?: EvidenceCoverageV1 | null;
+  mode?: ChatRetrievalModeV1 | null;
   model?: string | null;
   inputTokens?: number | null;
   outputTokens?: number | null;
@@ -970,7 +974,14 @@ export async function appendAssistantMessageToThread(
             evidenceCoverage:
               input.evidenceCoverage === undefined
                 ? undefined
-                : (input.evidenceCoverage as unknown as Prisma.InputJsonValue),
+                : toNullableJson(
+                    input.evidenceCoverage === null
+                      ? null
+                      : {
+                          ...input.evidenceCoverage,
+                          ...(input.mode ? { mode: input.mode } : {}),
+                        }
+                  ),
             model: input.model ?? null,
             inputTokens: input.inputTokens ?? null,
             outputTokens: input.outputTokens ?? null,

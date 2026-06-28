@@ -236,7 +236,10 @@ async function main() {
       uiMessage: { role: "assistant", content: input.content },
       retrievedChunkIds: input.retrievedChunkIds,
       citations: input.citations,
-      evidenceCoverage: input.evidenceCoverage ?? null,
+      evidenceCoverage:
+        input.evidenceCoverage == null
+          ? null
+          : { ...input.evidenceCoverage, ...(input.mode ? { mode: input.mode } : {}) },
       model: input.model ?? null,
       inputTokens: input.inputTokens ?? 101,
       outputTokens: input.outputTokens ?? 29,
@@ -695,6 +698,115 @@ async function main() {
   assertCondition(
     StructuredChatOutputV1Schema.safeParse(replayOutput).success,
     "thread replay output failed schema validation",
+    failures
+  );
+
+  // Reopen a vector answer persisted with the real LLM id: the persisted
+  // evidenceCoverage.mode must win over modeFromModel(model).
+  prismaModule.prisma.chatThread.findFirst = async () => ({
+    id: "thread_vector_reload",
+    title: "Vector reload",
+    documentFilter: { documentIds: ["doc_a"] },
+    outputTemplate: { templateId: "rag_qa.default.v1", templateVersion: 1 },
+    createdAt: new Date("2026-06-23T08:00:00.000Z"),
+    updatedAt: new Date("2026-06-23T08:05:00.000Z"),
+    messages: [
+      {
+        id: "message_vector_assistant",
+        role: "ASSISTANT",
+        sequence: 1,
+        requestKey: "req_vector:assistant:key",
+        content: "Vector-grounded answer [S1]",
+        citations: [
+          {
+            marker: "[S1]",
+            rank: 1,
+            chunkId: "chunk_vector",
+            documentId: "doc_a",
+            pageStart: 1,
+            pageEnd: 1,
+            snippet: "Vector evidence",
+            sourceBlockIds: ["field_vector"],
+            relevanceScore: 0.578,
+          },
+        ],
+        evidenceCoverage: {
+          version: 1,
+          selectedDocumentIds: ["doc_a"],
+          retrievedByDocumentId: { doc_a: 1 },
+          finalByDocumentId: { doc_a: 1 },
+          noEvidenceDocumentIds: [],
+          mode: "vector_retrieval",
+        },
+        model: "gpt-4o-mini",
+        inputTokens: 11,
+        outputTokens: 5,
+        createdAt: new Date("2026-06-23T08:04:00.000Z"),
+      },
+    ],
+  });
+  const vectorReload = await json(
+    await threadRoute.GET({}, { params: Promise.resolve({ id: "thread_vector_reload" }) })
+  );
+  const vectorReloadOutput = vectorReload.body.messages
+    .find((message) => message.role === "assistant")
+    ?.parts?.find((part) => part.type === "data-output")?.data?.output;
+  assertCondition(
+    vectorReloadOutput?.support?.retrievalMode === "vector_retrieval",
+    "reopened vector answer must report retrievalMode=vector_retrieval from persisted mode",
+    failures
+  );
+
+  // Legacy row: real LLM id, NO persisted mode -> still falls back to local.
+  prismaModule.prisma.chatThread.findFirst = async () => ({
+    id: "thread_legacy_reload",
+    title: "Legacy reload",
+    documentFilter: { documentIds: ["doc_a"] },
+    outputTemplate: { templateId: "rag_qa.default.v1", templateVersion: 1 },
+    createdAt: new Date("2026-06-23T08:00:00.000Z"),
+    updatedAt: new Date("2026-06-23T08:05:00.000Z"),
+    messages: [
+      {
+        id: "message_legacy_assistant",
+        role: "ASSISTANT",
+        sequence: 1,
+        requestKey: "req_legacy:assistant:key",
+        content: "Legacy answer [S1]",
+        citations: [
+          {
+            marker: "[S1]",
+            rank: 1,
+            chunkId: "chunk_legacy",
+            documentId: "doc_a",
+            pageStart: 1,
+            pageEnd: 1,
+            snippet: "Legacy evidence",
+            sourceBlockIds: ["field_legacy"],
+          },
+        ],
+        evidenceCoverage: {
+          version: 1,
+          selectedDocumentIds: ["doc_a"],
+          retrievedByDocumentId: { doc_a: 1 },
+          finalByDocumentId: { doc_a: 1 },
+          noEvidenceDocumentIds: [],
+        },
+        model: "gpt-4o-mini",
+        inputTokens: 11,
+        outputTokens: 5,
+        createdAt: new Date("2026-06-23T08:04:00.000Z"),
+      },
+    ],
+  });
+  const legacyReload = await json(
+    await threadRoute.GET({}, { params: Promise.resolve({ id: "thread_legacy_reload" }) })
+  );
+  const legacyReloadOutput = legacyReload.body.messages
+    .find((message) => message.role === "assistant")
+    ?.parts?.find((part) => part.type === "data-output")?.data?.output;
+  assertCondition(
+    legacyReloadOutput?.support?.retrievalMode === "local_retrieval_fallback",
+    "legacy row without persisted mode must fall back to local_retrieval_fallback",
     failures
   );
 

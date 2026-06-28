@@ -214,6 +214,21 @@ function modeFromModel(model: string | null | undefined): ChatRetrievalMode {
     : "local_retrieval_fallback";
 }
 
+function retrievalModeFromPersisted(message: {
+  evidenceCoverage: unknown;
+  model: string | null;
+}): ChatRetrievalMode {
+  const coverage = message.evidenceCoverage;
+  if (coverage && typeof coverage === "object" && "mode" in coverage) {
+    const mode = (coverage as { mode?: unknown }).mode;
+    if (mode === "vector_retrieval" || mode === "local_retrieval_fallback") {
+      return mode;
+    }
+  }
+
+  return modeFromModel(message.model);
+}
+
 function statusHintFromModel(
   model: string | null | undefined
 ): OutputStatusV1 | undefined {
@@ -1274,6 +1289,7 @@ async function streamAiChatResponse(input: {
     retrievedChunkIds: input.finalResults.map((resultItem) => resultItem.chunk.chunkId),
     citations: finalCitations,
     evidenceCoverage: finalCoverage,
+    mode: input.mode,
     model: input.model,
     inputTokens,
     outputTokens,
@@ -1470,7 +1486,7 @@ export async function POST(request: Request) {
           citations: citationsFromMessage(existingAssistantMessage) as ChatCitationData[],
           model: existingAssistantMessage.model ?? providerConfig.aiModel,
           coverage: coverageFromMessage(existingAssistantMessage),
-          mode: modeFromModel(existingAssistantMessage.model),
+          mode: retrievalModeFromPersisted(existingAssistantMessage),
           retrievalWarnings: [],
           inputTokens: existingAssistantMessage.inputTokens,
           outputTokens: existingAssistantMessage.outputTokens,
@@ -1487,7 +1503,7 @@ export async function POST(request: Request) {
         userMessage,
         assistantMessage: existingAssistantMessage,
         retrievalWarnings: [],
-        mode: modeFromModel(existingAssistantMessage.model),
+        mode: retrievalModeFromPersisted(existingAssistantMessage),
         outputTemplate: activeOutputTemplate,
         scoreThreshold: providerConfig.vectorMinScore,
         statusHint: statusHintFromModel(existingAssistantMessage.model),
@@ -1509,6 +1525,7 @@ export async function POST(request: Request) {
         retrievedChunkIds: [],
         citations: [],
         evidenceCoverage: nonDocumentCoverage,
+        mode: "local_retrieval_fallback",
         model: NON_DOCUMENT_CHAT_MODEL,
         requestKey: assistantRequestKey,
       });
@@ -1605,7 +1622,7 @@ export async function POST(request: Request) {
           userMessage,
           assistantMessage: completedRetryMessage,
           retrievalWarnings: [],
-          mode: modeFromModel(completedRetryMessage.model),
+          mode: retrievalModeFromPersisted(completedRetryMessage),
           outputTemplate: activeOutputTemplate,
           scoreThreshold: providerConfig.vectorMinScore,
           statusHint: statusHintFromModel(completedRetryMessage.model),
@@ -1674,6 +1691,7 @@ export async function POST(request: Request) {
         retrievedChunkIds: [],
         citations: [],
         evidenceCoverage: narrowingCoverage,
+        mode: evidenceSelection.mode,
         model: MULTI_SOURCE_NARROWING_MODEL,
         requestKey: assistantRequestKey,
       });
@@ -1762,6 +1780,7 @@ export async function POST(request: Request) {
           retrievedChunkIds: [],
           citations: [],
           evidenceCoverage: insufficientCoverage,
+          mode: evidenceSelection.mode,
           model: AI_CHAT_INSUFFICIENT_MODEL,
           requestKey: assistantRequestKey,
         });
@@ -1902,6 +1921,7 @@ export async function POST(request: Request) {
       retrievedChunkIds: finalResults.map((result) => result.chunk.chunkId),
       citations: finalLocalCitations,
       evidenceCoverage: finalLocalCoverage,
+      mode: evidenceSelection.mode,
       model: evidenceSelection.model,
       requestKey: assistantRequestKey,
     });

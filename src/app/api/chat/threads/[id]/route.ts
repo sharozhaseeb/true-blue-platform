@@ -69,7 +69,7 @@ function uiPartsForMessage(message: {
           citations,
           coverage,
           retrievalWarnings: [],
-          mode: modeFromModel(message.model),
+          mode: retrievalModeForMessage(message),
           model: message.model,
           inputTokens: message.inputTokens,
           outputTokens: message.outputTokens,
@@ -89,6 +89,21 @@ function modeFromModel(model: string | null | undefined) {
   return model === VECTOR_RETRIEVAL_CHAT_MODEL
     ? "vector_retrieval"
     : "local_retrieval_fallback";
+}
+
+function retrievalModeForMessage(message: {
+  evidenceCoverage: unknown;
+  model: string | null;
+}): "vector_retrieval" | "local_retrieval_fallback" {
+  const coverage = message.evidenceCoverage;
+  if (coverage && typeof coverage === "object" && "mode" in coverage) {
+    const mode = (coverage as { mode?: unknown }).mode;
+    if (mode === "vector_retrieval" || mode === "local_retrieval_fallback") {
+      return mode;
+    }
+  }
+
+  return modeFromModel(message.model);
 }
 
 function statusHintFromModel(model: string | null | undefined) {
